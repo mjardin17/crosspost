@@ -20,6 +20,7 @@ export interface PlatformConfig {
   specs: PlatformSpecs;
   contentRules: string[];
   prompt: string;
+  platformBestPractices: string;
 }
 
 export interface AnalystInsights {
@@ -54,6 +55,11 @@ export interface PlatformGeneration {
   charCount: number;
   critic: CriticReview;
   scoring: HookScoreBreakdown;
+  specialistBotName?: string;
+  specialistBotAvatar?: string;
+  specialistBotTone?: string;
+  specialistBotPacing?: string;
+  specialistBotMetadata?: string;
 }
 
 export interface MultiAgentResponse {
