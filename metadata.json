@@ -1,6 +1,6 @@
 {
-  "name": "CROSSPOST Content Operating System",
-  "description": "Enterprise-grade multi-agent content generation, predictive analytics scoring, and distributed cross-platform operating system architecture.",
+  "name": "Empire OS Command Center",
+  "description": "The sovereign AI operating system command center featuring the automated Video Factory, StoryForge children's literature, Boss Listers AI, and CrossPost.",
   "requestFramePermissions": [
     "camera",
     "microphone",

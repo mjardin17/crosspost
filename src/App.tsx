@@ -2,15 +2,31 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Terminal, Server, Brain, Cpu, Database, AlertTriangle, 
   CheckCircle, Play, Sparkles, RefreshCw, Layers, Sliders, 
-  FileText, ShieldAlert, Check, Plus, HelpCircle, ArrowRight,
+  FileText, ShieldAlert, Shield, Check, Plus, HelpCircle, ArrowRight,
   TrendingUp, RefreshCw as LoopIcon, ExternalLink, Code, Copy, 
   Download, BookOpen, ChevronDown, ChevronUp, Star, DollarSign,
-  Search, MessageSquare, Compass, Coins
+  Search, MessageSquare, Compass, Coins, Video, Workflow
 } from "lucide-react";
 import { SystemArchitecture } from "./components/SystemArchitecture";
 import { MathEngine } from "./components/MathEngine";
 import { MultiAgentResponse, PlatformConfig } from "./types";
 import { PerformanceDashboard } from "./components/PerformanceDashboard";
+import EmpireOSPluginHub from "./components/EmpireOSPluginHub";
+import OllamaCommandCenter from "./components/OllamaCommandCenter";
+import EmpireInspector from "./components/EmpireInspector";
+import MissionControl from "./components/MissionControl";
+import AIRouter from "./components/AIRouter";
+import ProjectImportCenter from "./components/ProjectImportCenter";
+import StoryForge from "./components/StoryForge";
+import VideoIntelligenceCenter from "./components/VideoIntelligenceCenter";
+import BossListers from "./components/BossListers";
+import DeploymentCenter from "./components/DeploymentCenter";
+import TestingCenter from "./components/TestingCenter";
+import KnowledgeCenter from "./components/KnowledgeCenter";
+import EmpireOrchestrator from "./components/EmpireOrchestrator";
+import SettingsCenter from "./components/SettingsCenter";
+import { LayoutGrid } from "lucide-react";
+import CommandCenter from "./components/CommandCenter";
 
 const INITIAL_SCRIPT_TEMPLATE = `In this deep architectural teardown, we review how to move past modern React client-side monoliths handling isolated metadata. We explain how storing platform API keys directly on client user devices creates immense key disclosure vulnerability. Instead, we propose an enterprise topology utilizing Go FastAPI gateways, Temporal workflows, PostgreSQL pgvector style retrieval, and serverless FFmpeg pipelines on Fargate to manage high throughput contextual generations. Let's dive in!`;
 
@@ -48,7 +64,14 @@ export default function App() {
   const [apiMode, setApiMode] = useState<"live" | "simulated">("simulated");
 
   // Navigation & Workspace states
-  const [currentWorkspace, setCurrentWorkspace] = useState<"ingress" | "monetizer">("ingress");
+  const [currentWorkspace, setCurrentWorkspace] = useState<string>("mission");
+  const [githubToken, setGithubToken] = useState<string>(() => localStorage.getItem("empire_github_token") || "");
+
+  const handleUpdateGithubToken = (token: string) => {
+    setGithubToken(token);
+    localStorage.setItem("empire_github_token", token);
+  };
+
   const [monetizerSubTab, setMonetizerSubTab] = useState<"discovery" | "dashboard">("discovery");
 
   // Algorithmic Monetization Bot States
@@ -533,71 +556,332 @@ export default function App() {
           
           {/* Main Title branding */}
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-tr from-cyan-500 to-indigo-600 rounded flex items-center justify-center font-bold text-slate-950 text-lg shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-              CP
+            <div className="p-2 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded flex items-center justify-center font-bold text-slate-950 text-lg shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+              EO
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent uppercase">
-                  CROSSPOST
+                <h1 className="text-lg font-black tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent uppercase font-sans">
+                  EMPIRE OS
                 </h1>
-                <span className="text-[10px] font-mono tracking-wider font-semibold text-cyan-400 bg-cyan-950/50 border border-cyan-900/60 px-1.5 py-0.5 rounded">
-                  v2.4 LTS BUILD
+                <span className="text-[10px] font-mono tracking-wider font-semibold text-indigo-400 bg-indigo-950/50 border border-indigo-900/60 px-1.5 py-0.5 rounded">
+                  v3.0 ENTERPRISE
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium">Distributed Multi-Agent Content Operating System & Scoring Engine</p>
+              <p className="text-[11px] text-slate-400 font-medium">Business Intelligence Workspace & Cognitive Routing Architecture</p>
             </div>
           </div>
 
-          {/* Workspace Switcher & Infrastructure Health Stats */}
+          {/* Infrastructure Health Stats & Fallback Telemetry */}
           <div className="flex flex-wrap items-center gap-4 text-xs">
-            
-            <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 p-1 rounded-lg">
-              <button
-                onClick={() => setCurrentWorkspace("ingress")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider transition cursor-pointer ${
-                  currentWorkspace === "ingress"
-                    ? "bg-gradient-to-r from-cyan-500 to-indigo-600 text-slate-950 shadow-md font-extrabold"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Content Ingress</span>
-              </button>
-              
-              <button
-                onClick={() => setCurrentWorkspace("monetizer")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider transition cursor-pointer ${
-                  currentWorkspace === "monetizer"
-                    ? "bg-gradient-to-r from-cyan-500 to-indigo-600 text-slate-950 shadow-md font-extrabold"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-                }`}
-              >
-                <Coins className="w-3.5 h-3.5" />
-                <span>Monetization Bot</span>
-                <span className="text-[8px] bg-cyan-950 border border-cyan-800/40 text-cyan-400 px-1 rounded-sm">COUNCIL</span>
-              </button>
-            </div>
-
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-md">
-              <Server className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-[10px] font-mono text-slate-400">GATEWAY: <strong className="text-emerald-400">ACTIVE (3000)</strong></span>
+              <Server className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span className="text-[10px] font-mono text-slate-400">INGRESS ROUTER: <strong className="text-emerald-400 font-bold">PORT 3000</strong></span>
             </div>
             
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-[10px] font-mono ${
               apiMode === "live" 
                 ? "bg-emerald-950/30 border-emerald-900/60 text-emerald-400" 
-                : "bg-amber-950/20 border-amber-900/50 text-amber-400"
+                : "bg-indigo-950/20 border-indigo-900/50 text-indigo-400"
             }`}>
               <Brain className="w-3.5 h-3.5 shrink-0" />
-              <span>ORCHESTRAPATH: <strong className="font-bold">{apiMode === "live" ? "GEMINI LIVE MODE" : "COGNITIVE SIMULATED FALLBACK"}</strong></span>
+              <span>ROUTER STATUS: <strong className="font-bold">{apiMode === "live" ? "GEMINI SECURE" : "SIMULATION ACTIVE"}</strong></span>
             </div>
           </div>
 
         </div>
       </header>
 
-      {/* Hero Welcome Segment with Interactive System Guide */}
+      <div className="flex flex-col lg:flex-row max-w-[1700px] mx-auto min-h-[calc(100vh-73px)]">
+        {/* Left Sidebar Menu */}
+        <aside className="w-full lg:w-64 shrink-0 bg-slate-950/20 border-b lg:border-b-0 lg:border-r border-slate-900 p-5 space-y-6">
+          
+          {/* Operations Section */}
+          <div className="space-y-2 font-sans">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase block">Operations</span>
+            <div className="space-y-1">
+              <button
+                onClick={() => setCurrentWorkspace("mission")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "mission"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
+                  <span>Mission Control</span>
+                </div>
+                <span className="text-[8px] bg-indigo-950 border border-indigo-900/40 text-indigo-300 px-1 rounded font-bold">CORE</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("commandcenter")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "commandcenter"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-indigo-400 animate-pulse" />
+                  <span>Command Center</span>
+                </div>
+                <span className="text-[8px] bg-emerald-950 border border-emerald-900/40 text-emerald-400 px-1 rounded font-bold">CORE</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("analytics")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "analytics"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-indigo-400" />
+                  <span>Analytics</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("automation")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "automation"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Workflow className="w-4 h-4 text-rose-400 animate-pulse" />
+                  <span>Empire Orchestrator</span>
+                </div>
+                <span className="text-[8px] bg-rose-950 border border-rose-900/40 text-rose-400 px-1 rounded font-bold">CORE</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("settings")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "settings"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  <span>Settings Center</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* AI Intelligence Section */}
+          <div className="space-y-2 font-sans">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase block">AI Intelligence</span>
+            <div className="space-y-1">
+              <button
+                onClick={() => setCurrentWorkspace("router")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "router"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-indigo-400" />
+                  <span>AI Router</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("ollama")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "ollama"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-indigo-400" />
+                  <span>Ollama Center</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("inspector")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "inspector"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-indigo-400 animate-pulse" />
+                  <span>Empire Inspector</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("import")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "import"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-indigo-400" />
+                  <span>Project Import</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Creative Console Section */}
+          <div className="space-y-2 font-sans">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase block">Creative Console</span>
+            <div className="space-y-1">
+              <button
+                onClick={() => setCurrentWorkspace("storyforge")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "storyforge"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-indigo-400" />
+                  <span>StoryForge</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("video_intel")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "video_intel"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-rose-400 animate-pulse" />
+                  <span>Video Factory</span>
+                </div>
+                <span className="text-[8px] bg-rose-950 border border-rose-900/40 text-rose-400 px-1 rounded font-bold">NEW</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("listers")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "listers"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-indigo-400" />
+                  <span>Boss Listers</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("ingress")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "ingress"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-indigo-400" />
+                  <span>Content Ingress</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Platform Depot Section */}
+          <div className="space-y-2 font-sans">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase block">Platform Depot</span>
+            <div className="space-y-1">
+              <button
+                onClick={() => setCurrentWorkspace("empire")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "empire"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  <span>Plugin Manager</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("monetizer")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "monetizer"
+                    ? "bg-indigo-650 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Coins className="w-4 h-4 text-indigo-400" />
+                  <span>Monetization Center</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("deployment")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "deployment"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Server className="w-4 h-4 text-indigo-400" />
+                  <span>Deployment Center</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("testing")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "testing"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-indigo-400" />
+                  <span>Testing Center</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("knowledge")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "knowledge"
+                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-indigo-400" />
+                  <span>Knowledge Center</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+        </aside>
+
+        {/* Right Main Content Pane */}
+        <main className="flex-grow min-w-0 p-6 lg:p-8 space-y-8">
+
+          {currentWorkspace === "ingress" && (
       <section className="bg-gradient-to-b from-slate-900/60 to-transparent py-8 px-6 border-b border-slate-900">
         <div className="max-w-7xl mx-auto">
           
@@ -690,11 +974,10 @@ export default function App() {
 
         </div>
       </section>
+      )}
 
-      {/* Main Panel Content Area */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {currentWorkspace === "ingress" ? (
-          <>
+      {currentWorkspace === "ingress" && (
+        <>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* LEFT INTERACTIVE CONSOLE COLUMN - 5 cols */}
@@ -1412,7 +1695,9 @@ export default function App() {
           </div>
         </section>
           </>
-        ) : (
+        )}
+
+        {currentWorkspace === "monetizer" && (
           <div className="space-y-8 animate-fadeIn">
             {/* Monetizer Sub-Tabs Navigation */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-850 pb-3">
@@ -1933,6 +2218,75 @@ export default function App() {
           </div>
         )}
 
+        {currentWorkspace === "mission" && (
+          <MissionControl onNavigate={(ws) => setCurrentWorkspace(ws)} />
+        )}
+
+        {currentWorkspace === "commandcenter" && (
+          <CommandCenter />
+        )}
+
+        {currentWorkspace === "analytics" && (
+          <PerformanceDashboard />
+        )}
+
+        {currentWorkspace === "automation" && (
+          <EmpireOrchestrator />
+        )}
+
+        {currentWorkspace === "settings" && (
+          <SettingsCenter 
+            githubToken={githubToken} 
+            onUpdateGithubToken={handleUpdateGithubToken}
+            apiMode={apiMode}
+            onUpdateApiMode={(mode) => setApiMode(mode)}
+          />
+        )}
+
+        {currentWorkspace === "router" && (
+          <AIRouter />
+        )}
+
+        {currentWorkspace === "ollama" && (
+          <OllamaCommandCenter />
+        )}
+
+        {currentWorkspace === "inspector" && (
+          <EmpireInspector />
+        )}
+
+        {currentWorkspace === "import" && (
+          <ProjectImportCenter />
+        )}
+
+        {currentWorkspace === "storyforge" && (
+          <StoryForge />
+        )}
+
+        {currentWorkspace === "video_intel" && (
+          <VideoIntelligenceCenter />
+        )}
+
+        {currentWorkspace === "listers" && (
+          <BossListers />
+        )}
+
+        {currentWorkspace === "empire" && (
+          <EmpireOSPluginHub />
+        )}
+
+        {currentWorkspace === "deployment" && (
+          <DeploymentCenter />
+        )}
+
+        {currentWorkspace === "testing" && (
+          <TestingCenter />
+        )}
+
+        {currentWorkspace === "knowledge" && (
+          <KnowledgeCenter />
+        )}
+
         {/* DEEPSEEK & LLM CODEBASE INGRESS EXPORTER SECTION */}
         <section id="deepseek-exporter" className="mt-12 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/20 border border-indigo-500/20 rounded-xl p-6 shadow-[0_0_30px_rgba(99,102,241,0.1)] relative">
           <div className="absolute right-4 top-4">
@@ -2068,6 +2422,8 @@ export default function App() {
         </section>
 
       </main>
+
+      </div>
 
     </div>
   );
