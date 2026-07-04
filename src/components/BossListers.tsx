@@ -3,7 +3,7 @@ import {
   Sparkles, Award, Star, ListChecks, DollarSign, RefreshCw, Send, ShieldCheck, Tag, Play, Settings,
   Brain, Plus, Trash2, AlertCircle, Eye, CheckCircle, Clock, Activity, ListOrdered, Shield, Layers,
   ChevronRight, UploadCloud, Edit3, X, Filter, ShoppingBag, Boxes, Layers3, Check, TrendingUp, HelpCircle,
-  Cpu
+  Cpu, Upload
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -91,10 +91,12 @@ export default function BossListers() {
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [statusFilter, setStatusFilter] = useState<string>("All");
 
-  // Selection
+  // Selection & Modals
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddingProduct, setIsAddingProduct] = useState<boolean>(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
 
   // Form Fields for Add/Edit
   const [formTitle, setFormTitle] = useState<string>("");
@@ -103,6 +105,11 @@ export default function BossListers() {
   const [formCost, setFormCost] = useState<number>(5.00);
   const [formQty, setFormQty] = useState<number>(5);
   const [formDesc, setFormDesc] = useState<string>("");
+  const [formDescEbay, setFormDescEbay] = useState<string>("");
+  const [formDescShopify, setFormDescShopify] = useState<string>("");
+  const [formDescEtsy, setFormDescEtsy] = useState<string>("");
+  const [formDescSocial, setFormDescSocial] = useState<string>("");
+  const [activeDescTab, setActiveDescTab] = useState<"standard" | "ebay" | "shopify" | "etsy" | "social">("standard");
   const [formCategory, setFormCategory] = useState<string>("Electronics");
   const [formCondition, setFormCondition] = useState<string>("New");
   const [formImages, setFormImages] = useState<string[]>(["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400"]);
@@ -185,6 +192,14 @@ export default function BossListers() {
     setFormCost(item.cost || 5.00);
     setFormQty(item.quantity);
     setFormDesc(item.description);
+    
+    // Auto populate platform-specific description variations for editing
+    setFormDescEbay(item.description ? `${item.description}\n\n[eBay Reference: SKU: ${item.sku} | Fast domestic dispatch | Handled with ultimate care]` : "");
+    setFormDescShopify(item.description ? `<h2>${item.title}</h2><p>${item.description}</p><p>Standard packaging. Authentic SKU reference: ${item.sku}</p>` : "");
+    setFormDescEtsy(item.description ? `${item.description}\n\n🌿 Sustainable materials, studio-crafted aesthetics, gift wrapping options available.` : "");
+    setFormDescSocial(item.description ? `✨ RESTOCKED ✨\n\n${item.title} is now available in our catalog for $${item.price}!\n\nDM to purchase or check the bio link! #vintage #boutique #curated` : "");
+    setActiveDescTab("standard");
+
     setFormCategory(item.category);
     setFormCondition(item.condition);
     setFormKeywords(item.keywords || "");
@@ -413,13 +428,159 @@ export default function BossListers() {
     }
   };
 
-  // Bulk Import
-  const handleBulkImport = async () => {
-    const mockProducts = [
+  // Trigger Bulk Import Modal
+  const handleBulkImport = () => {
+    setIsImportModalOpen(true);
+  };
+
+  // Parse CSV File (eBay, Shopify, or Manual)
+  const handleFileImport = (file: File, importType: 'ebay' | 'shopify' | 'manual') => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target?.result as string;
+      if (!text) return;
+      
+      const lines = text.split(/\r?\n/);
+      if (lines.length <= 1) {
+        alert("CSV file seems empty or has no data lines.");
+        return;
+      }
+      
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+      const parsedProducts: any[] = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const values: string[] = [];
+        let currentVal = '';
+        let insideQuotes = false;
+        for (let charIdx = 0; charIdx < line.length; charIdx++) {
+          const char = line[charIdx];
+          if (char === '"' || char === "'") {
+            insideQuotes = !insideQuotes;
+          } else if (char === ',' && !insideQuotes) {
+            values.push(currentVal.trim().replace(/^["']|["']$/g, ''));
+            currentVal = '';
+          } else {
+            currentVal += char;
+          }
+        }
+        values.push(currentVal.trim().replace(/^["']|["']$/g, ''));
+        
+        if (values.length < headers.length) continue;
+        
+        const row: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        
+        let title = '';
+        let desc = '';
+        let price = 19.99;
+        let cost = 5.00;
+        let quantity = 5;
+        let sku = '';
+        let category = 'Uncategorized';
+        let condition = 'New';
+        let images: string[] = [];
+        
+        if (importType === 'ebay') {
+          title = row['Title'] || row['title'] || '';
+          desc = row['Description'] || row['description'] || '';
+          price = Number(row['Price'] || row['price'] || 19.99);
+          quantity = Number(row['Quantity'] || row['quantity'] || 1);
+          sku = row['Custom Label'] || row['SKU'] || row['sku'] || `EB-${Math.floor(1000 + Math.random() * 9000)}`;
+          category = row['Category'] || row['category'] || 'eBay Listed';
+          const pic = row['PicURL'] || row['PicUrl'] || row['picurl'] || '';
+          if (pic) images = [pic];
+        } else if (importType === 'shopify') {
+          title = row['Title'] || row['title'] || '';
+          desc = row['Body (HTML)'] || row['body'] || row['Description'] || '';
+          price = Number(row['Variant Price'] || row['price'] || 19.99);
+          quantity = Number(row['Variant Inventory Qty'] || row['quantity'] || 1);
+          sku = row['Variant SKU'] || row['SKU'] || row['sku'] || `SH-${Math.floor(1000 + Math.random() * 9000)}`;
+          category = row['Product Category'] || row['Type'] || 'Shopify Listed';
+          const img = row['Image Src'] || row['image'] || '';
+          if (img) images = [img];
+        } else {
+          title = row['Title'] || row['title'] || row['Name'] || '';
+          desc = row['Description'] || row['description'] || '';
+          price = Number(row['Price'] || row['price'] || 19.99);
+          cost = Number(row['Cost'] || row['cost'] || 5.00);
+          quantity = Number(row['Quantity'] || row['quantity'] || row['Qty'] || 1);
+          sku = row['SKU'] || row['sku'] || `SKU-${Math.floor(1000 + Math.random() * 9000)}`;
+          category = row['Category'] || row['category'] || 'General';
+          condition = row['Condition'] || row['condition'] || 'New';
+          const imgs = row['Images'] || row['images'] || row['Image'] || '';
+          if (imgs) images = imgs.split(';').map(u => u.trim());
+        }
+        
+        if (title) {
+          parsedProducts.push({
+            title,
+            description: desc,
+            price: isNaN(price) ? 19.99 : price,
+            cost: isNaN(cost) ? 5.00 : cost,
+            quantity: isNaN(quantity) ? 1 : quantity,
+            sku,
+            category,
+            condition,
+            images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400"]
+          });
+        }
+      }
+      
+      if (parsedProducts.length > 0) {
+        setImportPreview(parsedProducts);
+        setTerminalLogs(prev => [
+          `[BULK IMPORTER] Parsed ${parsedProducts.length} items from ${importType.toUpperCase()} file. Review preview in dialog.`,
+          ...prev
+        ]);
+      } else {
+        alert("Could not parse any valid products. Check column headers. Make sure headers contain 'Title', 'Price', 'SKU' (or 'Variant Price', 'Variant SKU' for Shopify).");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Confirm Import & Save to Database
+  const handleConfirmImport = async () => {
+    if (importPreview.length === 0) return;
+    setLoading(true);
+    try {
+      const response = await fetch("/api/crossposter/inventory/bulk-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products: importPreview })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTerminalLogs(prev => [
+          `[BULK IMPORTER] Successfully imported ${data.count} items into the Master SQLite Database!`,
+          ...prev
+        ]);
+        setImportPreview([]);
+        setIsImportModalOpen(false);
+        loadAllData();
+      }
+    } catch (err) {
+      console.error(err);
+      setTerminalLogs(prev => [`[ERROR] Bulk import transaction failed: ${(err as Error).message}`, ...prev]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load High-Fidelity Demo Inventory
+  const handleLoadDemoInventory = async () => {
+    const demoProducts = [
       {
         title: "Mechanical Split Ergonomic Keyboard",
         description: "Custom mechanical split keyboard with organic split layout, RGB hot-swap sockets, and Gateron Brown switches.",
         price: 189.99,
+        cost: 65.00,
         quantity: 8,
         sku: `SKU-KB-${Math.floor(1000 + Math.random() * 9000)}`,
         category: "Computer Hardware",
@@ -430,6 +591,7 @@ export default function BossListers() {
         title: "Vintage Leather Jacket 1992",
         description: "Oversized genuine leather jacket from 1990s. Distressed heavy brown leather, size Large.",
         price: 124.50,
+        cost: 30.00,
         quantity: 1,
         sku: `SKU-CL-${Math.floor(1000 + Math.random() * 9000)}`,
         category: "Clothing & Fashion",
@@ -440,6 +602,7 @@ export default function BossListers() {
         title: "Handcrafted Ceramic Matcha Bowl",
         description: "Studio pottery custom matcha tea bowl. Warm earth tones, clay texture foot, glazed rim.",
         price: 36.00,
+        cost: 8.00,
         quantity: 12,
         sku: `SKU-CR-${Math.floor(1000 + Math.random() * 9000)}`,
         category: "Home & Handmade",
@@ -450,6 +613,7 @@ export default function BossListers() {
         title: "Retro Portable Cassette Walkman",
         description: "Classic portable cassette tape player with stereo headphones, auto-reverse functionality, mint working order.",
         price: 79.99,
+        cost: 20.00,
         quantity: 3,
         sku: `SKU-WM-${Math.floor(1000 + Math.random() * 9000)}`,
         category: "Electronics",
@@ -458,23 +622,11 @@ export default function BossListers() {
       }
     ];
 
-    try {
-      const response = await fetch("/api/crossposter/inventory/bulk-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ products: mockProducts })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setTerminalLogs(prev => [
-          `[BULK IMPORTER] Successfully imported ${data.count} curated high-fidelity listings into SQLite database!`,
-          ...prev
-        ]);
-        loadAllData();
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    setImportPreview(demoProducts);
+    setTerminalLogs(prev => [
+      `[BULK IMPORTER] Loaded ${demoProducts.length} high-fidelity e-commerce demo products. Click Confirm & Save.`,
+      ...prev
+    ]);
   };
 
   // Bulk Edit
@@ -524,6 +676,11 @@ export default function BossListers() {
     setFormCost(5.00);
     setFormQty(5);
     setFormDesc("");
+    setFormDescEbay("");
+    setFormDescShopify("");
+    setFormDescEtsy("");
+    setFormDescSocial("");
+    setActiveDescTab("standard");
     setFormCategory("Electronics");
     setFormCondition("New");
     setFormKeywords("");
@@ -1099,6 +1256,177 @@ export default function BossListers() {
                     </div>
                   </div>
                 </div>
+
+                {/* Secondary Analytics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Financial Metrics & Asset Value */}
+                  <div className="bg-zinc-950/40 border border-zinc-850 p-4 rounded-lg space-y-4">
+                    <h3 className="text-xs font-mono font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-indigo-400" />
+                      Master Inventory Financial Overview
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 font-mono">
+                      <div className="bg-zinc-950/80 border border-zinc-900 rounded p-3">
+                        <div className="text-[9px] text-zinc-500 uppercase">Gross Revenue</div>
+                        <div className="text-base font-bold text-slate-100 mt-0.5">${(analytics.totalRevenue || 0).toLocaleString()}</div>
+                      </div>
+                      <div className="bg-zinc-950/80 border border-zinc-900 rounded p-3">
+                        <div className="text-[9px] text-zinc-500 uppercase">Cost of Goods (COGS)</div>
+                        <div className="text-base font-bold text-slate-100 mt-0.5">${(analytics.totalCogs || 0).toLocaleString()}</div>
+                      </div>
+                      <div className="bg-zinc-950/80 border border-zinc-900 rounded p-3 bg-indigo-950/10">
+                        <div className="text-[9px] text-indigo-400 uppercase">Net Realized Profit</div>
+                        <div className="text-base font-bold text-emerald-400 mt-0.5">${(analytics.totalProfit || 0).toLocaleString()}</div>
+                      </div>
+                      <div className="bg-zinc-950/80 border border-zinc-900 rounded p-3">
+                        <div className="text-[9px] text-zinc-500 uppercase">Avg Profit Margin %</div>
+                        <div className="text-base font-bold text-slate-100 mt-0.5">
+                          {analytics.totalRevenue > 0 ? ((analytics.totalProfit / analytics.totalRevenue) * 100).toFixed(1) : "0.0"}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Inventory Asset Value Card */}
+                    <div className="border border-zinc-900 rounded p-3.5 bg-zinc-950/80 flex items-center justify-between">
+                      <div>
+                        <div className="text-[9px] font-mono text-slate-500 uppercase">Unlisted Capital / Inventory Cost Value</div>
+                        <div className="text-sm font-mono font-bold text-slate-300 mt-0.5">${(analytics.totalInventoryCost || 0).toLocaleString()}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[9px] font-mono text-slate-500 uppercase">Est. Retail Market Value</div>
+                        <div className="text-sm font-mono font-bold text-indigo-400 mt-0.5">${(analytics.totalInventoryValue || 0).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Inventory Aging Indicators */}
+                  <div className="bg-zinc-950/40 border border-zinc-850 p-4 rounded-lg space-y-4">
+                    <h3 className="text-xs font-mono font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      Listing Portfolio Aging Distribution
+                    </h3>
+                    
+                    <div className="space-y-3 font-mono text-xs">
+                      <div>
+                        <div className="flex justify-between text-slate-400 mb-1">
+                          <span>Recent (0 - 30 days listed)</span>
+                          <span className="text-indigo-400 font-bold">{analytics.aging?.["0-30"] || 0} items</span>
+                        </div>
+                        <div className="h-2 bg-zinc-950 rounded overflow-hidden">
+                          <div
+                            className="bg-indigo-500 h-full rounded transition-all"
+                            style={{ width: `${Math.min(100, ((analytics.aging?.["0-30"] || 0) / (analytics.totalItems || 1)) * 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-slate-400 mb-1">
+                          <span>Established (31 - 60 days listed)</span>
+                          <span className="text-amber-400 font-bold">{analytics.aging?.["31-60"] || 0} items</span>
+                        </div>
+                        <div className="h-2 bg-zinc-950 rounded overflow-hidden">
+                          <div
+                            className="bg-amber-500 h-full rounded transition-all"
+                            style={{ width: `${Math.min(100, ((analytics.aging?.["31-60"] || 0) / (analytics.totalItems || 1)) * 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-slate-400 mb-1">
+                          <span>Stale (61+ days listed / Relist recommended)</span>
+                          <span className="text-rose-400 font-bold">{analytics.aging?.["61+"] || 0} items</span>
+                        </div>
+                        <div className="h-2 bg-zinc-950 rounded overflow-hidden">
+                          <div
+                            className="bg-rose-500 h-full rounded transition-all"
+                            style={{ width: `${Math.min(100, ((analytics.aging?.["61+"] || 0) / (analytics.totalItems || 1)) * 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-zinc-500 font-sans leading-relaxed pt-1">
+                      Stale listings of over 60 days will lose organic rank algorithms. Use AI Copilot voice command <code className="text-indigo-400 font-mono">"Relist stale inventory"</code> to auto-republish them.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Best Performers & Slow Sellers tables */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Best Performers Table */}
+                  <div className="bg-zinc-950/40 border border-zinc-850 p-4 rounded-lg space-y-3">
+                    <h3 className="text-xs font-mono font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Top Performing Conversions
+                    </h3>
+                    <div className="border border-zinc-900 rounded bg-zinc-950/80 overflow-hidden">
+                      <table className="w-full text-left text-[11px] font-mono">
+                        <thead className="bg-zinc-950 text-slate-500 uppercase text-[9px] border-b border-zinc-900">
+                          <tr>
+                            <th className="p-2">SKU</th>
+                            <th className="p-2">Title</th>
+                            <th className="p-2 text-right">Sales</th>
+                            <th className="p-2 text-right">Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-900 text-slate-300">
+                          {analytics.bestPerformers && analytics.bestPerformers.length > 0 ? (
+                            analytics.bestPerformers.map((item: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-zinc-900/30">
+                                <td className="p-2 text-slate-400 font-bold">{item.sku}</td>
+                                <td className="p-2 truncate max-w-[120px] font-sans" title={item.title}>{item.title}</td>
+                                <td className="p-2 text-right text-indigo-400">{item.sales} sold</td>
+                                <td className="p-2 text-right text-emerald-400 font-bold">${(item.price * item.sales).toFixed(2)}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="p-6 text-center text-zinc-600">No sold listings tracked.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Slow Sellers Table */}
+                  <div className="bg-zinc-950/40 border border-zinc-850 p-4 rounded-lg space-y-3">
+                    <h3 className="text-xs font-mono font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-rose-500" />
+                      Underperforming Listings (Slow Sellers)
+                    </h3>
+                    <div className="border border-zinc-900 rounded bg-zinc-950/80 overflow-hidden">
+                      <table className="w-full text-left text-[11px] font-mono">
+                        <thead className="bg-zinc-950 text-slate-500 uppercase text-[9px] border-b border-zinc-900">
+                          <tr>
+                            <th className="p-2">SKU</th>
+                            <th className="p-2">Title</th>
+                            <th className="p-2 text-right">Views</th>
+                            <th className="p-2">Category</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-900 text-slate-300">
+                          {analytics.slowSellers && analytics.slowSellers.length > 0 ? (
+                            analytics.slowSellers.map((item: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-zinc-900/30">
+                                <td className="p-2 text-slate-400 font-bold">{item.sku}</td>
+                                <td className="p-2 truncate max-w-[120px] font-sans" title={item.title}>{item.title}</td>
+                                <td className="p-2 text-right text-amber-500">{item.views} views</td>
+                                <td className="p-2"><span className="px-1.5 py-0.5 rounded bg-zinc-900 text-[9px] text-zinc-500">{item.category}</span></td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="p-6 text-center text-zinc-600">All listings are converting properly.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -1333,14 +1661,49 @@ export default function BossListers() {
                       </button>
                     </div>
                   ))}
+                  <div className="relative w-full h-12">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          const files = e.target.files;
+                          for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (ev.target?.result) {
+                                setFormImages(prev => [...prev, ev.target!.result as string]);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }
+                      }}
+                      className="hidden"
+                      id="gallery-file-upload-input"
+                    />
+                    <label
+                      htmlFor="gallery-file-upload-input"
+                      className="w-full h-full rounded border-2 border-dashed border-zinc-800 hover:border-indigo-800/80 hover:bg-indigo-950/20 flex flex-col items-center justify-center text-zinc-500 hover:text-indigo-400 transition-all cursor-pointer text-center"
+                      title="Upload custom image or drag and drop files"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span className="text-[8px] font-mono mt-0.5">UPLOAD</span>
+                    </label>
+                  </div>
+                  
                   <button
                     onClick={() => {
-                      const url = prompt("Enter simulated image URL:");
+                      const url = prompt("Enter custom image web URL:");
                       if (url) setFormImages(prev => [...prev, url]);
                     }}
-                    className="w-full h-12 rounded border-2 border-dashed border-zinc-800 hover:border-zinc-700 flex flex-col items-center justify-center text-zinc-500 hover:text-zinc-400 transition-all cursor-pointer"
+                    type="button"
+                    className="w-full h-12 rounded border-2 border-dashed border-zinc-800 hover:border-zinc-700 flex flex-col items-center justify-center text-zinc-500 hover:text-slate-300 transition-all cursor-pointer text-center"
+                    title="Add image via remote web URL link"
                   >
-                    <Plus className="w-4 h-4" />
+                    <span className="text-[9px] font-mono font-bold">LINK URL</span>
                   </button>
                 </div>
               </div>
@@ -1489,14 +1852,88 @@ export default function BossListers() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">Product Description</label>
-                  <textarea
-                    value={formDesc}
-                    onChange={(e) => setFormDesc(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-slate-200 focus:outline-none h-24"
-                    placeholder="Draft product details..."
-                  />
+                <div className="space-y-2 border border-zinc-850/60 rounded-lg p-3 bg-zinc-950/20">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">Product Descriptions</label>
+                    <span className="text-[8px] font-mono bg-indigo-950 text-indigo-400 px-2 py-0.5 rounded border border-indigo-900/30">PLATFORM SPECIFIC OVERRIDES</span>
+                  </div>
+                  
+                  {/* Tabs bar */}
+                  <div className="flex gap-1 bg-zinc-950 p-1 rounded-md border border-zinc-850 overflow-x-auto">
+                    {[
+                      { id: "standard", label: "Master" },
+                      { id: "ebay", label: "eBay SEO" },
+                      { id: "shopify", label: "Shopify Elegant" },
+                      { id: "etsy", label: "Etsy Story" },
+                      { id: "social", label: "Social Ad" }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveDescTab(tab.id as any)}
+                        className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold whitespace-nowrap transition-all ${
+                          activeDescTab === tab.id
+                            ? "bg-indigo-600 text-white"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {activeDescTab === "standard" && (
+                    <textarea
+                      value={formDesc}
+                      onChange={(e) => setFormDesc(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-slate-200 focus:outline-none h-28"
+                      placeholder="Master description used as base..."
+                    />
+                  )}
+                  {activeDescTab === "ebay" && (
+                    <div className="space-y-1">
+                      <textarea
+                        value={formDescEbay}
+                        onChange={(e) => setFormDescEbay(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-amber-400 focus:outline-none h-28"
+                        placeholder="eBay description (HTML/Plain text)..."
+                      />
+                      <p className="text-[9px] font-mono text-slate-500">Optimized with strict eBay buyer protection terms and dynamic delivery specs.</p>
+                    </div>
+                  )}
+                  {activeDescTab === "shopify" && (
+                    <div className="space-y-1">
+                      <textarea
+                        value={formDescShopify}
+                        onChange={(e) => setFormDescShopify(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none h-28"
+                        placeholder="Shopify description..."
+                      />
+                      <p className="text-[9px] font-mono text-slate-500">Rich HTML blocks, detailed feature charts, and responsive checkout story structure.</p>
+                    </div>
+                  )}
+                  {activeDescTab === "etsy" && (
+                    <div className="space-y-1">
+                      <textarea
+                        value={formDescEtsy}
+                        onChange={(e) => setFormDescEtsy(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-orange-400 focus:outline-none h-28"
+                        placeholder="Etsy description..."
+                      />
+                      <p className="text-[9px] font-mono text-slate-500">Focuses on materials, artisan craftsmanship, vintage history, and custom attributes.</p>
+                    </div>
+                  )}
+                  {activeDescTab === "social" && (
+                    <div className="space-y-1">
+                      <textarea
+                        value={formDescSocial}
+                        onChange={(e) => setFormDescSocial(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-pink-400 focus:outline-none h-28"
+                        placeholder="Social ad description..."
+                      />
+                      <p className="text-[9px] font-mono text-slate-500">Formatted with hashtags, emojis, and high-impact call-to-actions to spark conversion.</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1629,6 +2066,197 @@ export default function BossListers() {
           ))}
         </div>
       </div>
+
+      {/* BULK IMPORTER MODAL OVERLAY */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in font-sans">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/80">
+              <div className="flex items-center gap-2">
+                <Boxes className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-sm font-mono font-black text-slate-100 uppercase tracking-tight">
+                  CrossPoster Bulk Inventory Importer
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setImportPreview([]);
+                }}
+                className="text-slate-400 hover:text-slate-200 transition-all font-bold p-1 rounded hover:bg-zinc-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* eBay CSV drop zone */}
+                <div className="border border-zinc-800 rounded-lg p-4 bg-zinc-950/20 hover:border-amber-600/40 transition-all flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider">eBay CSV Format</div>
+                    <p className="text-xs text-slate-400 mt-1">Parses standard eBay listing exports. Maps `Title`, `Description`, `Price`, and `Quantity` directly.</p>
+                  </div>
+                  <div className="relative border border-dashed border-zinc-800 hover:border-amber-500 rounded p-4 text-center cursor-pointer bg-zinc-950 hover:bg-zinc-900/30 transition-all">
+                    <input
+                      type="file"
+                      accept=".csv,.txt"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileImport(file, 'ebay');
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    <Upload className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+                    <span className="text-[9px] font-mono text-slate-500">SELECT EBAY CSV</span>
+                  </div>
+                </div>
+
+                {/* Shopify CSV drop zone */}
+                <div className="border border-zinc-800 rounded-lg p-4 bg-zinc-950/20 hover:border-emerald-600/40 transition-all flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-wider">Shopify CSV Format</div>
+                    <p className="text-xs text-slate-400 mt-1">Parses official Shopify exporter tables. Maps `Handle`, `Title`, `Variant Price`, and `Image Src` columns.</p>
+                  </div>
+                  <div className="relative border border-dashed border-zinc-800 hover:border-emerald-500 rounded p-4 text-center cursor-pointer bg-zinc-950 hover:bg-zinc-900/30 transition-all">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileImport(file, 'shopify');
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    <Upload className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+                    <span className="text-[9px] font-mono text-slate-500">SELECT SHOPIFY CSV</span>
+                  </div>
+                </div>
+
+                {/* Manual CSV / Sample drop zone */}
+                <div className="border border-zinc-800 rounded-lg p-4 bg-zinc-950/20 hover:border-indigo-600/40 transition-all flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">Manual CSV Upload</div>
+                    <p className="text-xs text-slate-400 mt-1">Accepts any standard spreadsheet with headings: `Title`, `Description`, `SKU`, `Price`, `Cost`, `Quantity`.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="relative border border-dashed border-zinc-800 hover:border-indigo-500 rounded p-4 text-center cursor-pointer bg-zinc-950 hover:bg-zinc-900/30 transition-all flex-1">
+                      <input
+                        type="file"
+                        accept=".csv"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileImport(file, 'manual');
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                      <Upload className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
+                      <span className="text-[9px] font-mono text-slate-500">UPLOAD CSV</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLoadDemoInventory}
+                      className="bg-indigo-950/40 hover:bg-indigo-900/40 border border-indigo-900/50 hover:border-indigo-800 text-indigo-400 rounded p-3 flex flex-col items-center justify-center transition-all cursor-pointer flex-1 text-center"
+                    >
+                      <Sparkles className="w-5 h-5 mb-1 text-indigo-400" />
+                      <span className="text-[9px] font-mono font-bold">DEMO SKUS</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview table block */}
+              {importPreview.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-300">Parsed Source of Truth Preview ({importPreview.length} items)</span>
+                    </div>
+                    <span className="text-[9px] font-mono text-slate-500">Note: All values can be edited or optimized via AI once imported.</span>
+                  </div>
+
+                  <div className="border border-zinc-800 rounded bg-zinc-950/40 overflow-hidden">
+                    <div className="max-h-60 overflow-y-auto">
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead className="bg-zinc-950 sticky top-0 text-[10px] text-slate-400 uppercase border-b border-zinc-850">
+                          <tr>
+                            <th className="p-2.5">Photo</th>
+                            <th className="p-2.5">SKU</th>
+                            <th className="p-2.5">Title</th>
+                            <th className="p-2.5 text-right">Cost ($)</th>
+                            <th className="p-2.5 text-right">Price ($)</th>
+                            <th className="p-2.5 text-right">Qty</th>
+                            <th className="p-2.5">Category</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-850">
+                          {importPreview.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-zinc-900/40 text-slate-300">
+                              <td className="p-2">
+                                <img
+                                  src={Array.isArray(item.images) ? item.images[0] : item.images}
+                                  alt=""
+                                  className="w-8 h-8 object-cover rounded bg-zinc-900 border border-zinc-800"
+                                />
+                              </td>
+                              <td className="p-2 font-mono font-bold text-slate-400">{item.sku}</td>
+                              <td className="p-2 font-sans max-w-[200px] truncate" title={item.title}>{item.title}</td>
+                              <td className="p-2 text-right text-slate-400">${Number(item.cost || 5).toFixed(2)}</td>
+                              <td className="p-2 text-right text-emerald-400 font-bold">${Number(item.price || 19.99).toFixed(2)}</td>
+                              <td className="p-2 text-right text-indigo-400">{item.quantity}</td>
+                              <td className="p-2"><span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[9px] text-zinc-400">{item.category}</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="border border-dashed border-zinc-800 rounded-lg p-12 text-center text-slate-500">
+                  <Upload className="w-10 h-10 text-zinc-700 mx-auto mb-2" />
+                  <p className="text-xs font-mono text-slate-400">No active CSV parsed yet.</p>
+                  <p className="text-[10px] text-slate-600 mt-1 max-w-sm mx-auto">Upload an eBay or Shopify CSV export file above, or click the **DEMO SKUS** button to immediately populate high-quality test assets.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-zinc-800 flex justify-between items-center bg-zinc-950/80">
+              <button
+                onClick={() => {
+                  setImportPreview([]);
+                }}
+                disabled={importPreview.length === 0}
+                className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-slate-400 hover:text-slate-200 px-4 py-2 rounded text-xs font-mono transition-all disabled:opacity-50 cursor-pointer"
+              >
+                CLEAR PARSED PREVIEW
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setIsImportModalOpen(false);
+                    setImportPreview([]);
+                  }}
+                  className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-slate-400 hover:text-slate-200 px-4 py-2 rounded text-xs font-mono transition-all cursor-pointer"
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={handleConfirmImport}
+                  disabled={importPreview.length === 0 || loading}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-slate-100 px-6 py-2 rounded text-xs font-mono font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {loading ? "IMPORTING..." : `CONFIRM & SAVE (${importPreview.length} ITEMS)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -5119,6 +5119,14 @@ app.get("/api/crossposter/analytics", (req, res) => {
     const totalRevenue = items.reduce((sum, item) => sum + ((item.sales || 0) * (item.price || 0)), 0);
     const totalViews = items.reduce((sum, item) => sum + (item.views || 0), 0);
 
+    // Compute cost of goods sold & actual net profit margins
+    const totalCostOfGoodsSold = items.reduce((sum, item) => sum + ((item.sales || 0) * (item.cost || 0)), 0);
+    const totalProfit = totalRevenue - totalCostOfGoodsSold;
+
+    // Asset values
+    const totalInventoryValue = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.price || 0)), 0);
+    const totalInventoryCost = items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.cost || 0)), 0);
+
     // Compute distribution per platform
     const platformCounts: Record<string, number> = {
       ebay: 0, fb: 0, etsy: 0, mercari: 0, poshmark: 0, depop: 0, shopify: 0
@@ -5144,14 +5152,62 @@ app.get("/api/crossposter/analytics", (req, res) => {
       { name: "Shopify", count: platformCounts.shopify }
     ];
 
-    // Simulated sales trends
+    // Identify slow sellers (0 sales, ordered by high views / aging)
+    const slowSellers = [...items]
+      .filter(item => (item.sales || 0) === 0)
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 5)
+      .map(item => ({
+        id: item.id,
+        sku: item.sku,
+        title: item.title,
+        price: item.price,
+        views: item.views || 0,
+        days_listed: Math.floor((new Date().getTime() - new Date(item.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24))
+      }));
+
+    // Identify best performers (sales > 0, ordered by sales DESC)
+    const bestPerformers = [...items]
+      .filter(item => (item.sales || 0) > 0)
+      .sort((a, b) => (b.sales || 0) - (a.sales || 0))
+      .slice(0, 5)
+      .map(item => ({
+        id: item.id,
+        sku: item.sku,
+        title: item.title,
+        sales: item.sales,
+        revenue: item.sales * item.price,
+        profit: item.sales * (item.price - (item.cost || 0))
+      }));
+
+    // Compute inventory aging
+    const nowTime = new Date().getTime();
+    let days0_30 = 0;
+    let days31_60 = 0;
+    let days61_plus = 0;
+
+    items.forEach(item => {
+      const created = new Date(item.created_at || new Date()).getTime();
+      const diffDays = Math.floor((nowTime - created) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 30) days0_30++;
+      else if (diffDays <= 60) days31_60++;
+      else days61_plus++;
+    });
+
+    const inventoryAging = {
+      days0_30,
+      days31_60,
+      days61_plus
+    };
+
+    // Simulated sales trends incorporating cost margins
     const salesTrends = [
-      { month: "Jan", sales: Math.floor(soldCount * 0.1) || 5, revenue: Math.floor(totalRevenue * 0.08) || 120 },
-      { month: "Feb", sales: Math.floor(soldCount * 0.12) || 8, revenue: Math.floor(totalRevenue * 0.1) || 200 },
-      { month: "Mar", sales: Math.floor(soldCount * 0.15) || 14, revenue: Math.floor(totalRevenue * 0.15) || 350 },
-      { month: "Apr", sales: Math.floor(soldCount * 0.18) || 19, revenue: Math.floor(totalRevenue * 0.18) || 450 },
-      { month: "May", sales: Math.floor(soldCount * 0.2) || 24, revenue: Math.floor(totalRevenue * 0.22) || 600 },
-      { month: "Jun", sales: Math.floor(soldCount * 0.25) || 31, revenue: Math.floor(totalRevenue * 0.27) || 800 }
+      { month: "Jan", sales: Math.floor(soldCount * 0.1) || 5, revenue: Math.floor(totalRevenue * 0.08) || 120, profit: Math.floor(totalProfit * 0.08) || 80 },
+      { month: "Feb", sales: Math.floor(soldCount * 0.12) || 8, revenue: Math.floor(totalRevenue * 0.1) || 200, profit: Math.floor(totalProfit * 0.1) || 135 },
+      { month: "Mar", sales: Math.floor(soldCount * 0.15) || 14, revenue: Math.floor(totalRevenue * 0.15) || 350, profit: Math.floor(totalProfit * 0.15) || 240 },
+      { month: "Apr", sales: Math.floor(soldCount * 0.18) || 19, revenue: Math.floor(totalRevenue * 0.18) || 450, profit: Math.floor(totalProfit * 0.18) || 310 },
+      { month: "May", sales: Math.floor(soldCount * 0.2) || 24, revenue: Math.floor(totalRevenue * 0.22) || 600, profit: Math.floor(totalProfit * 0.22) || 415 },
+      { month: "Jun", sales: Math.floor(soldCount * 0.25) || 31, revenue: Math.floor(totalRevenue * 0.27) || 800, profit: Math.floor(totalProfit * 0.27) || 550 }
     ];
 
     return res.json({
@@ -5161,8 +5217,15 @@ app.get("/api/crossposter/analytics", (req, res) => {
         activeListings,
         soldCount,
         totalRevenue: Number(totalRevenue.toFixed(2)),
+        totalCostOfGoodsSold: Number(totalCostOfGoodsSold.toFixed(2)),
+        totalProfit: Number(totalProfit.toFixed(2)),
+        totalInventoryValue: Number(totalInventoryValue.toFixed(2)),
+        totalInventoryCost: Number(totalInventoryCost.toFixed(2)),
         totalViews,
         activeListingsByPlatform,
+        slowSellers,
+        bestPerformers,
+        inventoryAging,
         salesTrends
       }
     });
@@ -5331,6 +5394,42 @@ app.post("/api/crossposter/assistant", async (req, res) => {
         logs: [`Copilot: Extracted high profit items list.`]
       });
     });
+
+  } else if (msgLower.includes("create draft") || msgLower.includes("create draft listings") || msgLower.includes("add draft")) {
+    const draftId = `p_${Math.random().toString(36).substr(2, 9)}`;
+    const draftSku = `SKU-DR-${Math.floor(1000 + Math.random() * 9000)}`;
+    const nowTime = new Date().toISOString();
+    
+    db.run(
+      `INSERT INTO crossposter_inventory (
+        id, title, description, price, cost, quantity, sku, category, condition, status, views, sales,
+        ebay_status, fb_status, etsy_status, mercari_status, poshmark_status, depop_status, shopify_status,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Draft', 0, 0, 'Not Listed', 'Not Listed', 'Not Listed', 'Not Listed', 'Not Listed', 'Not Listed', 'Not Listed', ?, ?)`,
+      [
+        draftId,
+        "Premium Noise-Cancelling Wireless Headphones",
+        "Experience ultimate acoustic immersion. Dynamic dual drivers, adaptive active noise cancellation, memory-foam ear cushions, 40-hour battery runtime with quick USB-C charging.",
+        149.99,
+        45.00,
+        8,
+        draftSku,
+        "Electronics",
+        "New",
+        nowTime,
+        nowTime
+      ],
+      function(err) {
+        if (err) {
+          return res.json({ success: false, error: err.message });
+        }
+        return res.json({
+          success: true,
+          message: `I have successfully auto-created a high-fidelity draft listing:\n• SKU: ${draftSku} | "Premium Noise-Cancelling Wireless Headphones" at $149.99 (Cost: $45.00, Margin: $104.99). You can now optimize it or publish it across all channels!`,
+          logs: [`Copilot: Created draft item ID ${draftId}.`]
+        });
+      }
+    );
 
   } else {
     try {
