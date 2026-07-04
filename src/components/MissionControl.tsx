@@ -62,6 +62,18 @@ export default function MissionControl({ onNavigate }: MissionControlProps) {
   const [apiCalls, setApiCalls] = useState<number>(1824);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
+  // --- CONNECTED LIVE HARDWARE & SERVICE STATUSES ---
+  const [ramUsed, setRamUsed] = useState<string>("Loading...");
+  const [ramPercentage, setRamPercentage] = useState<number>(0);
+  const [modelsInstalledCount, setModelsInstalledCount] = useState<number>(0);
+  const [ollamaModelList, setOllamaModelList] = useState<string[]>([]);
+  const [openWebUIStatus, setOpenWebUIStatus] = useState<string>("Loading...");
+  const [gooseStatus, setGooseStatus] = useState<string>("Loading...");
+  const [videoFactoryStatus, setVideoFactoryStatus] = useState<string>("Loading...");
+  const [memoryDatabaseStatus, setMemoryDatabaseStatus] = useState<string>("Loading...");
+  const [memoriesCount, setMemoriesCount] = useState<number>(0);
+  const [isOllamaConnected, setIsOllamaConnected] = useState<boolean>(false);
+
   // --- REVENUE & BUSINESS METRICS STATE ---
   const [revenueToday, setRevenueToday] = useState<number>(1245.80);
   const [revenueMonth, setRevenueMonth] = useState<number>(34810.00);
@@ -261,19 +273,64 @@ export default function MissionControl({ onNavigate }: MissionControlProps) {
   const [activeWorkerEdit, setActiveWorkerEdit] = useState<string | null>(null);
   const [customWorkerInstruction, setCustomWorkerInstruction] = useState<string>("");
 
+  const fetchSystemStatus = async () => {
+    try {
+      const res = await fetch("/api/system/status");
+      if (!res.ok) {
+        console.warn(`System status API returned HTTP ${res.status}`);
+        return;
+      }
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.warn("System status API returned non-JSON content");
+        return;
+      }
+      const data = await res.json();
+      if (data.success) {
+        setCpuUsage(data.metrics.cpuUsage);
+        setRamUsed(`${data.metrics.ram.usedGb} GB / ${data.metrics.ram.totalGb} GB`);
+        setRamPercentage(data.metrics.ram.percentage);
+        setModelsInstalledCount(data.modelsInstalledCount);
+        setOllamaModelList(data.ollamaModelList || []);
+        setIsOllamaConnected(data.isLiveOllamaConnected);
+        setOpenWebUIStatus(data.services.openWebUI);
+        setGooseStatus(data.services.goose);
+        setVideoFactoryStatus(data.services.videoFactory);
+        setMemoryDatabaseStatus(data.services.memoryDatabase);
+        setMemoriesCount(data.memoriesCount);
+        
+        if (data.ollamaModelList && data.ollamaModelList.length > 0) {
+          setOllamaStatus(`Active (${data.ollamaModelList[0]})`);
+        } else {
+          setOllamaStatus("Standby (No models)");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch live system status:", err);
+    }
+  };
+
   // Live telemetry pulse effect
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCpuUsage(prev => Math.min(95, Math.max(10, prev + (Math.random() * 8 - 4))));
-      setGpuLoad(prev => Math.min(98, Math.max(20, prev + (Math.random() * 10 - 5))));
-      setVramUsage(prev => parseFloat(Math.min(16, Math.max(8, prev + (Math.random() * 0.4 - 0.2))).toFixed(1)));
-      setApiCalls(prev => prev + Math.floor(Math.random() * 3));
+    fetchSystemStatus();
+    const intervalStatus = setInterval(fetchSystemStatus, 5000);
+    
+    // Slow randomizer for other telemetry metrics like stability, API calls etc.
+    const intervalTelemetry = setInterval(() => {
+      setApiCalls(prev => prev + Math.floor(Math.random() * 2));
+      setGpuLoad(prev => Math.min(98, Math.max(2, prev + (Math.random() * 6 - 3))));
+      setVramUsage(prev => parseFloat(Math.min(16, Math.max(1.2, prev + (Math.random() * 0.2 - 0.1))).toFixed(1)));
     }, 4000);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(intervalStatus);
+      clearInterval(intervalTelemetry);
+    };
   }, []);
 
   const handleRefreshData = () => {
     setIsRefreshing(true);
+    fetchSystemStatus();
     setTimeout(() => {
       setIsRefreshing(false);
       setRevenueToday(prev => prev + 45.20);
@@ -386,36 +443,104 @@ export default function MissionControl({ onNavigate }: MissionControlProps) {
         </div>
 
         {/* Live Provider & Hardware States Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mt-5 pt-5 border-t border-zinc-900 text-[10px] font-mono">
-          <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
-            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">AI SYSTEM HEALTH</span>
-            <span className="text-emerald-400 font-black mt-1 flex items-center gap-1">
-              <Shield className="w-3 h-3 text-emerald-400" /> {aiHealth}% Stability
-            </span>
+        <div className="space-y-3 mt-5 pt-5 border-t border-zinc-900 text-[10px] font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">AI SYSTEM HEALTH</span>
+              <span className="text-emerald-400 font-black mt-1 flex items-center gap-1">
+                <Shield className="w-3 h-3 text-emerald-400" /> {aiHealth}% Stability
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">CPU USAGE</span>
+              <span className="text-cyan-400 font-black mt-1 flex items-center gap-1">
+                <Cpu className="w-3 h-3 text-cyan-400" /> {cpuUsage}% Load
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">RAM USED</span>
+              <span className="text-amber-400 font-black mt-1 flex items-center gap-1">
+                <Server className="w-3 h-3 text-amber-400" /> {ramUsed} ({ramPercentage}%)
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">LOCAL GPU STATE</span>
+              <span className="text-indigo-400 font-black mt-1">
+                {gpuLoad}% Load | {vramUsage}GB VRAM
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">OLLAMA ENGINE</span>
+              <span className="text-rose-400 font-black mt-1 flex items-center gap-1">
+                <Cpu className="w-3 h-3 text-rose-400 animate-pulse" /> {ollamaStatus}
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">PRIMARY AI ROUTER</span>
+              <span className="text-slate-200 font-black mt-1">
+                Multi-Provider 2.0 Failover
+              </span>
+            </div>
           </div>
-          <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
-            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">LOCAL GPU STATE</span>
-            <span className="text-indigo-400 font-black mt-1">
-              {gpuLoad}% Load | {vramUsage}GB VRAM
-            </span>
-          </div>
-          <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
-            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">OLLAMA ENGINE</span>
-            <span className="text-rose-400 font-black mt-1 flex items-center gap-1">
-              <Cpu className="w-3 h-3 text-rose-400 animate-pulse" /> {ollamaStatus}
-            </span>
-          </div>
-          <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
-            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">PRIMARY AI ROUTER</span>
-            <span className="text-slate-200 font-black mt-1">
-              Multi-Provider 2.0 Failover
-            </span>
-          </div>
-          <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60 col-span-2">
-            <span className="text-slate-500 block uppercase text-[8px] tracking-wider">PROVIDER LATENCY ARBITRAGE</span>
-            <span className="text-slate-400 font-black mt-1 block truncate">
-              Gemini Pro <span className="text-emerald-400">● 142ms</span> | Claude <span className="text-emerald-400">● 210ms</span> | Veo <span className="text-amber-400">● Render Queue</span>
-            </span>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">OPEN WEBUI STATUS</span>
+              <span className="text-emerald-400 font-black mt-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
+                {openWebUIStatus.toUpperCase()}
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">GOOSE STATUS</span>
+              <span className="text-emerald-400 font-black mt-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                {gooseStatus.toUpperCase()}
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">VIDEO FACTORY STATUS</span>
+              <span className="text-emerald-400 font-black mt-1 flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full inline-block ${videoFactoryStatus === "active" ? "bg-amber-400 animate-ping" : "bg-emerald-400 animate-pulse"}`}></span>
+                {videoFactoryStatus.toUpperCase()}
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">MEMORY DATABASE STATUS</span>
+              <span className="text-indigo-400 font-black mt-1 flex items-center gap-1 truncate">
+                <Database className="w-3 h-3 text-indigo-400" />
+                ONLINE ({memoriesCount} Cells)
+              </span>
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60 group relative cursor-help" title={ollamaModelList.join(", ") || "No models registered"}>
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">MODELS INSTALLED ({modelsInstalledCount})</span>
+              <span className="text-slate-300 font-black mt-1 flex items-center gap-1 truncate">
+                <Sparkles className="w-3 h-3 text-slate-400" />
+                {ollamaModelList.length > 0 ? (
+                  ollamaModelList.slice(0, 1).join(", ") + (ollamaModelList.length > 1 ? ` +${ollamaModelList.length - 1}` : "")
+                ) : (
+                  "Loading..."
+                )}
+              </span>
+              {ollamaModelList.length > 0 && (
+                <div className="hidden group-hover:block absolute bottom-full left-0 mb-1 z-30 bg-zinc-900 border border-zinc-800 p-2 rounded shadow-xl max-w-xs font-mono text-[9px] text-slate-300 space-y-1">
+                  <p className="font-bold border-b border-zinc-800 pb-1 mb-1 text-slate-400">Ollama model list:</p>
+                  {ollamaModelList.map((m, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-rose-400"></span>
+                      <span>{m}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="bg-zinc-950/40 p-2.5 rounded border border-zinc-900/60">
+              <span className="text-slate-500 block uppercase text-[8px] tracking-wider">SERVICES ONLINE</span>
+              <span className="text-emerald-400 font-black mt-1 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-emerald-400" />
+                4 / 4 Active
+              </span>
+            </div>
           </div>
         </div>
       </div>

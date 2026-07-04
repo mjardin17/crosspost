@@ -47,6 +47,12 @@ Each file inside this knowledge base has been crafted to govern specific archite
 10. **`FOLDER_STRUCTURE.md`**
     - *Core Purpose*: A strict structural file-tree of the workspace to guide your directory writes and prevent duplicates.
 
+11. **`MASTER_SPECIFICATION_v1.md`**
+    - *Core Purpose*: The locked, consolidated system engineering blueprint for Empire OS.
+
+12. **`ENGINEERING_ORGANIZATION_BLUEPRINT.md`**
+    - *Core Purpose*: Complete specifications for the sovereign AI software maintenance company.
+
 ---
 
 ## 3. HOW TO USE THE CONTEXT PACKAGE

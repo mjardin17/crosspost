@@ -286,8 +286,8 @@ export default function OllamaCommandCenter() {
     fetchQueue();
     fetchSystemMetrics();
 
-    const intervalStats = setInterval(fetchSystemMetrics, 3000);
-    const intervalQueue = setInterval(fetchQueue, 1500); // Fast queue monitoring
+    const intervalStats = setInterval(fetchSystemMetrics, 5000);
+    const intervalQueue = setInterval(fetchQueue, 5000); // Poll queue every 5 seconds
 
     return () => {
       clearInterval(intervalStats);
