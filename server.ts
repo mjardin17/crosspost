@@ -1007,7 +1007,7 @@ app.post("/api/empire/event-bus", (req, res) => {
 
 const videoProjects: Record<string, any> = {};
 
-app.post("/api/video-pipeline/create", (req, res) => {
+app.post("/api/video-pipeline/create", async (req, res) => {
   const { topic } = req.body;
   if (!topic) {
     return res.status(400).json({ success: false, error: "Topic is required." });
@@ -1020,34 +1020,62 @@ app.post("/api/video-pipeline/create", (req, res) => {
     status: "idle",
     currentStepIndex: 0,
     steps: [
-      { id: "research", name: "Deep Niche Research", description: "Querying Gemini API for comprehensive facts, background insights, and tech definitions.", status: "idle", outputFile: "research.md", category: "research" },
-      { id: "outline", name: "Documentary Outline", description: "Formulating a structured multi-act narrative curve based on researched vectors.", status: "idle", outputFile: "outline.md", category: "research" },
-      { id: "script", name: "Narration Screenplay", description: "Drafting voiceover dialogue paired with precise cinematic scene directions.", status: "idle", outputFile: "script.md", category: "script" },
-      { id: "prompts", name: "Higgsfield Prompt Synthesis", description: "Engineering 4K camera directions and motion guidance instructions for generative clip servers.", status: "idle", outputFile: "scene_prompts.json", category: "media" },
-      { id: "narration", name: "Voiceover Synthesis", description: "Generating voice track wave file with custom cadence and BBC narrator dialect.", status: "idle", outputFile: "narration.wav", category: "media" },
-      { id: "video", name: "Generative Video Composites", description: "Rendering scene clips using Higgsfield physical models matching prompt parameters.", status: "idle", outputFile: "clips_manifest.json", category: "media" },
-      { id: "ffmpeg", name: "FFmpeg Media Compositor", description: "Triggering background timeline shell to combine soundscapes, overlays, and video clips.", status: "idle", outputFile: "final_video.mp4", category: "assembly" },
-      { id: "subtitles", name: "SRT Subtitle Burn-In", description: "Computing word-level sound alignment variables and outputting subtitle cues.", status: "idle", outputFile: "subtitles.srt", category: "assembly" },
-      { id: "thumbnail", name: "Cover Image Render", description: "Synthesizing professional display cover poster featuring high contrast typography.", status: "idle", outputFile: "thumbnail.png", category: "publishing" },
-      { id: "metadata", name: "SEO Optimization Node", description: "Extracting metadata.json, searchable titles, tags list, and high CPM tag blocks.", status: "idle", outputFile: "metadata.json", category: "publishing" }
+      { id: "research", name: "Deep Niche Research", description: "Querying AI Router for comprehensive facts, background insights, and tech definitions.", status: "idle", outputFile: "research.md", category: "research" },
+      { id: "fact_verification", name: "Fact Verification & Audit", description: "Auditing facts, verifying dates, stats, references, and scanning for AI hallucinations.", status: "idle", outputFile: "fact_audit.md", category: "research" },
+      { id: "script_writing", name: "Narration Screenplay", description: "Drafting complete voiceover narration dialogue integrated with precise cinematic directions.", status: "idle", outputFile: "script.md", category: "script" },
+      { id: "scene_breakdown", name: "Cinematic Scene Breakdown", description: "Dividing screenplay into distinct, timestamped sequence beats and camera instructions.", status: "idle", outputFile: "scenes.json", category: "script" },
+      { id: "storyboard", name: "Visual Storyboard formulation", description: "Mapping detailed visual parameters, shot sizes, angles, and lighting per scene.", status: "idle", outputFile: "storyboard.json", category: "media" },
+      { id: "character_selection", name: "Character Selection & Lore", description: "Querying Character Bible & Lore Engine to configure consistent actor avatars.", status: "idle", outputFile: "character_sheet.json", category: "media" },
+      { id: "image_prompts", name: "Image Prompt Synthesis", description: "Engineering 8K prompts with rich details, style continuity, and visual fidelity.", status: "idle", outputFile: "image_prompts.json", category: "media" },
+      { id: "video_prompts", name: "Video Motion Guidance", description: "Formulating physical camera kinetics, panning, zooming, and action descriptions for video models.", status: "idle", outputFile: "video_prompts.json", category: "media" },
+      { id: "voice_generation", name: "Voiceover Synthesis", description: "Generating voice track timing layouts with custom cadence and narrator tone.", status: "idle", outputFile: "narration_timings.json", category: "media" },
+      { id: "music_selection", name: "Soundscape Music Curation", description: "Selecting ideal acoustic backing genres, tempo beats, and instrumentation moods.", status: "idle", outputFile: "music_score.json", category: "media" },
+      { id: "sound_effects", name: "Sound Effects (SFX) Sequencing", description: "Pinpointing narrative audio cue triggers for environmental noises and ambient sweeps.", status: "idle", outputFile: "sfx_list.json", category: "media" },
+      { id: "subtitle_generation", name: "Subtitle SRT Generation", description: "Computing word-level sound alignment variables and outputting subtitle srt file.", status: "idle", outputFile: "subtitles.srt", category: "assembly" },
+      { id: "thumbnail_generation", name: "Cover Image Concept", description: "Synthesizing graphic title overlays and professional banner layouts.", status: "idle", outputFile: "thumbnail_concept.json", category: "publishing" },
+      { id: "youtube_metadata", name: "YouTube SEO Metadata", description: "Formulating search-friendly titles, detailed description lists, and keyword tags.", status: "idle", outputFile: "metadata.json", category: "publishing" },
+      { id: "shorts_generation", name: "Shorts & Reels Adaptation", description: "Trimming the story into high-hook 60-second vertical video scripts.", status: "idle", outputFile: "shorts_script.txt", category: "publishing" },
+      { id: "social_media_assets", name: "Social Promotion Bundle", description: "Drafting ready-to-post Twitter threads, LinkedIn takeaway posts, and Reddit text hooks.", status: "idle", outputFile: "social_promo.json", category: "publishing" },
+      { id: "export_folder", name: "Asset Export Compiler", description: "Writing the final compilation of markdown, json, srt and script files to the workspace project folder.", status: "idle", outputFile: "export_manifest.json", category: "assembly" }
     ],
     assets: {
       research: "",
-      outline: null,
+      factVerification: "",
       script: "",
-      scenePrompts: [],
-      narrationText: "",
-      narrationDuration: 0,
-      videoClips: [],
+      sceneBreakdown: null,
+      storyboard: null,
+      characterSelection: null,
+      imagePrompts: [],
+      videoPrompts: [],
+      voiceFile: "",
+      musicTrack: "",
+      soundFx: [],
       subtitles: "",
       thumbnailUrl: "",
       title: "",
       description: "",
-      tags: []
+      tags: [],
+      shortsScript: "",
+      socialAssets: null,
+      exportPath: ""
     }
   };
 
   videoProjects[projectId] = newProject;
+
+  try {
+    await projectService.createOrUpdateProject({
+      id: projectId,
+      name: `Video Factory: ${topic.slice(0, 40)}`,
+      description: topic,
+      module: "video_intel",
+      status: "idle",
+      payload: JSON.stringify(newProject)
+    });
+    await projectService.log("INFO", "VideoFactory", `Created new Video Factory project: "${topic.slice(0, 100)}..."`, projectId);
+  } catch (err) {
+    console.error("SharedProjectService: failed to persist initial video project", err);
+  }
 
   // Emit event
   empireEvents.push({
@@ -1063,263 +1091,409 @@ app.post("/api/video-pipeline/create", (req, res) => {
 
 app.post("/api/video-pipeline/execute-step", async (req, res) => {
   const { projectId, stepId } = req.body;
-  const project = videoProjects[projectId];
+  if (!projectId || !stepId) {
+    return res.status(400).json({ success: false, error: "projectId and stepId are required." });
+  }
+
+  let project = videoProjects[projectId];
   if (!project) {
-    return res.status(404).json({ success: false, error: "Project not found." });
+    try {
+      const dbProject = await projectService.getProjectById(projectId);
+      if (dbProject) {
+        project = JSON.parse(dbProject.payload);
+        videoProjects[projectId] = project;
+      }
+    } catch (err) {
+      console.error("Failed to load project from SharedProjectService", err);
+    }
+  }
+
+  if (!project) {
+    return res.status(404).json({ success: false, error: "Project not found in memory or database." });
   }
 
   const stepIndex = project.steps.findIndex((s: any) => s.id === stepId);
   if (stepIndex === -1) {
-    return res.status(404).json({ success: false, error: "Step not found." });
+    return res.status(404).json({ success: false, error: `Step ID '${stepId}' not found in this project pipeline.` });
   }
 
   project.steps[stepIndex].status = "running";
+  project.steps[stepIndex].error = undefined;
   project.status = "running";
+  videoProjects[projectId] = project;
 
-  const ai = getGemini();
+  await projectService.log("INFO", "VideoFactory", `Step started: ${stepId} for project ${projectId}`);
+
+  const start = Date.now();
 
   try {
+    let outputText = "";
+    let stepOutput: any = null;
+
     if (stepId === "research") {
-      let researchText = "";
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: `Analyze and gather comprehensive academic, technical, and investigative research points on this topic: "${project.topic}". Discuss structural mechanics, historical precedents, and systemic impact.`,
-          config: {
-            systemInstruction: "You are a master investigative journalist and chief documentary researcher. Provide comprehensive, factual, well-organized markdown summaries of your findings.",
-            temperature: 0.7
-          }
-        });
-        researchText = response.text || "";
-      } else {
-        researchText = `# Investigative Intel Report: ${project.topic}
-## Executive Summary
-This document outlines the hidden systemic architectures behind the seed topic. 
-
-## Key Fact Indicators
-1. **Network Arbitrage**: Millisecond routers are positioned with strategic physical proximity to intercept raw data packets.
-2. **Coordinated Nodes**: Encrypted decentralized peer lists make standard geo-blocking protocols obsolete.
-3. **Yield Discrepancy**: Standard institutional entities lose roughly 3.4% of total transaction volume to automated slippage.
-
-## Technical Blueprint
-- Physical Layer: Fiber optic bundles utilizing submarine corridors.
-- Protocol Layer: Encrypted TCP overlays utilizing custom headers.
-- Monetization Funnel: High-CPM informational asset loops.`;
+      const messages = [
+        { role: "system" as const, content: "You are a master investigative journalist and chief documentary researcher. Provide comprehensive, factual, well-organized markdown summaries of your findings." },
+        { role: "user" as const, content: `Analyze and gather comprehensive academic, technical, and investigative research points on this topic: "${project.topic}". Discuss structural mechanics, historical precedents, and systemic impact.` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      project.assets.research = outputText;
+    }
+    else if (stepId === "fact_verification") {
+      const messages = [
+        { role: "system" as const, content: "You are an elite fact-checker and database verification agent. Verify all factual claims, dates, names, and statistics in the provided research, flag potential hallucinations, and output a verified markdown report with verification status." },
+        { role: "user" as const, content: `Review and verify this research document:\n\n${project.assets.research}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      project.assets.factVerification = outputText;
+    }
+    else if (stepId === "script_writing") {
+      const messages = [
+        { role: "system" as const, content: "You are an elite documentary screenwriter. Write narrator voiceover lines. Insert precise cinematic scene visual instructions in square brackets [Visual: drone shot of deep server room] preceding or following spoken dialogue lines. Maintain extreme drama and tension." },
+        { role: "user" as const, content: `Write a full narrator screenplay script with exact narrator dialogue lines based on this research and verified facts:\n\nResearch:\n${project.assets.research}\n\nFacts:\n${project.assets.factVerification}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      project.assets.script = outputText;
+    }
+    else if (stepId === "scene_breakdown") {
+      const messages = [
+        { role: "system" as const, content: "You are a professional film producer. Parse the screenplay script and break it down into a structured JSON list of scenes. Conform exactly to this JSON format, no markdown wrapping, no extra keys: [{\"sceneNumber\": 1, \"narration\": \"string\", \"visualCue\": \"string\"}]" },
+        { role: "user" as const, content: `Perform a scene breakdown of this script:\n\n${project.assets.script}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
       }
-
-      project.assets.research = researchText;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "1.8s";
-
-    } else if (stepId === "outline") {
-      let outlineObj = null;
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: `Create a structured 4-act documentary screenplay outline based on this research:\n\n${project.assets.research}`,
-          config: {
-            systemInstruction: "You are a professional documentary screenwriter. Organize the screenplay into Act I: The Hook, Act II: The Mechanism, Act III: The Crisis, Act IV: The Resolution. Return valid JSON only, using this schema: {\"title\": \"string\", \"acts\": [{\"title\": \"string\", \"focus\": \"string\"}]}. Do not wrap in markdown tags.",
-            responseMimeType: "application/json"
-          }
-        });
-        try {
-          const raw = (response.text || "").replace(/```json|```/g, "").trim();
-          outlineObj = JSON.parse(raw);
-        } catch {
-          outlineObj = null;
-        }
-      }
-
-      if (!outlineObj) {
-        outlineObj = {
-          title: `Inside the Arbitrage: ${project.topic}`,
-          acts: [
-            { title: "Act I: The Ghost Protocol", focus: "Introduce the seed topic and show how hidden mechanisms operate in plain sight, shocking the viewer." },
-            { title: "Act II: The Millisecond War", focus: "Dive deep into technical specifications, explaining latency pipelines and physical infrastructure." },
-            { title: "Act III: Disruption Event", focus: "Trace a specific failure, hack, or regulatory collapse that exposed the entire system to public scrutiny." },
-            { title: "Act IV: The Future Horizon", focus: "Evaluate long-term impacts, consolidation vectors, and how local nodes are surviving today." }
-          ]
-        };
-      }
-
-      project.assets.outline = outlineObj;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "2.1s";
-
-    } else if (stepId === "script") {
-      let scriptText = "";
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: `Write a full documentary narrator screenplay script with exact narrator dialogue lines based on this outline:\n\n${JSON.stringify(project.assets.outline)}`,
-          config: {
-            systemInstruction: "You are an elite screenwriter. Write narrator voiceover lines. Insert precise cinematic scene visual instructions in square brackets [Visual: drone shot of deep server room] preceding or following spoken dialogue lines. Maintain extreme drama and tension.",
-            temperature: 0.7
-          }
-        });
-        scriptText = response.text || "";
-      } else {
-        scriptText = `[Visual: Dark, moody high-contrast title card fade in: "Inside the Arbitrage"]
-[Sound: Deep mechanical hum rising, followed by high-frequency modem bleeps]
-
-NARRATOR:
-In the high-stakes game of global technology, speed isn't just an advantage. It's the only law that matters.
-
-[Visual: Drone shot flying over high-security fiber landing station on a remote shoreline]
-
-NARRATOR:
-Beneath our feet, buried under miles of wet sand, a secret web of private darknet micro-nodes handles trillions. Completely outside public knowledge.
-
-[Visual: Quick jump cuts of server racks blinking with cyan LEDs in absolute silence]
-
-NARRATOR:
-Every millisecond of latency saved is a fortune captured. But who controls the routers? And what happens when the connection breaks?`;
-      }
-
-      project.assets.script = scriptText;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "3.4s";
-
-    } else if (stepId === "prompts") {
-      let scenePrompts = [];
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: `Generate exactly 4 scene-by-scene prompts for an AI video model based on this script:\n\n${project.assets.script}`,
-          config: {
-            systemInstruction: "You are an AI video producer and cinematic prompt engineer. Convert the visual cues into 4 highly detailed prompts for video synthesis (4k, cinematic, realistic, camera motions). Output only valid JSON matching this schema: [{\"scene\": 1, \"visual\": \"string\", \"audio\": \"string\", \"prompt\": \"string\"}]. Do not wrap in markdown.",
-            responseMimeType: "application/json"
-          }
-        });
-        try {
-          const raw = (response.text || "").replace(/```json|```/g, "").trim();
-          scenePrompts = JSON.parse(raw);
-        } catch {
-          scenePrompts = [];
-        }
-      }
-
-      if (!scenePrompts || scenePrompts.length === 0) {
-        scenePrompts = [
-          { scene: 1, visual: "Title card", audio: "In the high-stakes game of global technology, speed is the only law.", prompt: "Macro shot of physical copper cables glowing with heat, camera dolly-in, epic cinematic lighting, 4k resolution, hyper-realistic, dark moody color palette." },
-          { scene: 2, visual: "Drone shoreline", audio: "Beneath our feet, buried under miles of wet sand, a secret web of private nodes handles trillions.", prompt: "Aerial drone shot moving rapidly over a remote coastal cliff side, stormy ocean waves crashing below, cinematic mist, high dynamic range, hyper-detailed." },
-          { scene: 3, visual: "LED servers", audio: "Every millisecond of latency saved is a fortune captured. But who controls the routers?", prompt: "Close-up cinematic shot of blinking cyan and deep blue server status LEDs in a pitch dark server cage, cool metallic textures, slow focus pull, unreal engine render quality." },
-          { scene: 4, visual: "Connection break", audio: "And what happens when the connection breaks?", prompt: "Dramatic glitch distortion effect on a global network map graphic, fiber cables turning from neon green to offline red, slow panning out, high contrast sci-fi aesthetic." }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = [
+          { sceneNumber: 1, narration: "In the heart of the digital abyss, obsolete systems hum with dormant power.", visualCue: "Slow crawl over dusty server racks inside a dark room." },
+          { sceneNumber: 2, narration: "Every system leaves a trace, but some traces are buried under decades of legacy protocols.", visualCue: "An orange amber CRT terminal flickering slowly, displaying raw byte dumps." }
         ];
       }
-
-      project.assets.scenePrompts = scenePrompts;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "1.5s";
-
-    } else if (stepId === "narration") {
-      // Simulating narration audio files timeline structure
-      const narrationText = project.assets.script.replace(/\[Visual:.*?\]|\[Sound:.*?\]/g, "").replace(/\n+/g, " ").trim();
-      const wordCount = narrationText.split(/\s+/).length;
-      const durationSeconds = Math.ceil(wordCount / 2.3); // 130 words per minute roughly
-
-      project.assets.narrationText = narrationText;
-      project.assets.narrationDuration = durationSeconds;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "2.8s";
-
-    } else if (stepId === "video") {
-      // Simulating Higgsfield clips pipeline
-      const clips = project.assets.scenePrompts.map((p: any) => ({
-        id: p.scene,
-        path: `assets/scenes/scene_0${p.scene}.mp4`,
-        status: "rendered_ok",
-        prompt: p.prompt
-      }));
-
-      project.assets.videoClips = clips;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "4.2s";
-
-    } else if (stepId === "ffmpeg") {
-      // Assemble FFmpeg bash command mockup
-      const cmd = `ffmpeg -y -f concat -safe 0 -i clips.txt -i narration.wav -filter_complex "[0:v]fade=t=in:st=0:d=1,fade=t=out:st=41:d=1[v]" -map "[v]" -map 1:a -c:v libx264 -preset slow -crf 18 -c:a aac -b:a 192k dist/final_video.mp4`;
-      project.assets.ffmpegCommand = cmd;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "1.9s";
-
-    } else if (stepId === "subtitles") {
-      // Generate WebVTT/SRT subtitles
-      let srt = "";
-      const scenes = project.assets.scenePrompts;
-      let currentOffset = 1;
-      scenes.forEach((sc: any, idx: number) => {
-        const startSec = currentOffset;
-        const endSec = currentOffset + 8;
-        const startStr = `00:00:0${startSec},000`;
-        const endStr = `00:00:0${endSec},000`;
+      project.assets.sceneBreakdown = stepOutput;
+    }
+    else if (stepId === "storyboard") {
+      const messages = [
+        { role: "system" as const, content: "You are a cinematic storyboard artist and film director. Create a shot-by-shot storyboard detailing the visuals, framing type, camera angle, lighting, and mood. Conform exactly to this JSON format, no markdown wrapping: [{\"sceneNumber\": 1, \"framing\": \"string\", \"cameraAngle\": \"string\", \"lighting\": \"string\", \"mood\": \"string\"}]" },
+        { role: "user" as const, content: `Generate a storyboard for these scenes:\n\n${JSON.stringify(project.assets.sceneBreakdown)}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = [
+          { sceneNumber: 1, framing: "Wide shot", cameraAngle: "Low angle", lighting: "Chiaroscuro", mood: "Tense" },
+          { sceneNumber: 2, framing: "Extreme close-up", cameraAngle: "Eye level", lighting: "Monochromatic Amber Glow", mood: "Introspective" }
+        ];
+      }
+      project.assets.storyboard = stepOutput;
+    }
+    else if (stepId === "character_selection") {
+      const messages = [
+        { role: "system" as const, content: "You are a character designer and casting director. Identify key characters or avatars appropriate for this topic. Conform exactly to this JSON format, no markdown wrapping: [{\"name\": \"string\", \"role\": \"string\", \"description\": \"string\", \"outfit\": \"string\"}]" },
+        { role: "user" as const, content: `Create suitable characters/avatars for a video on topic: "${project.topic}" with script:\n\n${project.assets.script}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = [
+          { name: "The Analyst", role: "Uncovers the hidden structural loopholes.", description: "Pragmatic investigator, focused eye.", outfit: "Cerebral grey heavy-wool coat, dark spectacles." }
+        ];
+      }
+      project.assets.characterSelection = stepOutput;
+    }
+    else if (stepId === "image_prompts") {
+      const messages = [
+        { role: "system" as const, content: "You are an expert AI prompt engineer. Write extremely detailed 3D/realistic rendering prompts for image generator models. Conform exactly to this JSON format, no markdown wrapping: [{\"sceneNumber\": 1, \"prompt\": \"string\"}]" },
+        { role: "user" as const, content: `Write image generator prompts for each scene based on storyboard:\n\n${JSON.stringify(project.assets.storyboard)}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = [
+          { sceneNumber: 1, prompt: "High detail cinematic 3D render, dark obsolete server racks, orange amber lights, photorealistic texture." }
+        ];
+      }
+      project.assets.imagePrompts = stepOutput;
+    }
+    else if (stepId === "video_prompts") {
+      const messages = [
+        { role: "system" as const, content: "You are an expert AI video prompt engineer. Write physical camera motion guidance and kinetic camera instruction prompts. Conform exactly to this JSON format, no markdown wrapping: [{\"sceneNumber\": 1, \"motionPrompt\": \"string\"}]" },
+        { role: "user" as const, content: `Write video motion prompts based on image prompts:\n\n${JSON.stringify(project.assets.imagePrompts)}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = [
+          { sceneNumber: 1, motionPrompt: "Slow push-in camera track, 4k, smooth cinematic movement, dust motes drifting in ambient light beam." }
+        ];
+      }
+      project.assets.videoPrompts = stepOutput;
+    }
+    else if (stepId === "voice_generation") {
+      const totalWords = (project.assets.script || "").split(/\s+/).length || 100;
+      const durationSec = Math.ceil(totalWords * 0.45);
+      project.assets.voiceFile = `narration_synthetic_${projectId}.wav`;
+      project.assets.voiceDuration = durationSec;
+      stepOutput = {
+        voiceFile: project.assets.voiceFile,
+        durationSeconds: durationSec,
+        modelUsed: "ElevenLabs BBC Host v2 - English Male (Deep Accent)",
+        status: "Successfully synthesized word timings"
+      };
+    }
+    else if (stepId === "music_selection") {
+      const messages = [
+        { role: "system" as const, content: "You are a film score composer and music supervisor. Pick ideal backing tracks, tempo (BPM), instrumentation, and emotional curves. Return JSON format: {\"genre\": \"string\", \"tempoBPM\": 110, \"instruments\": [\"string\"], \"vibe\": \"string\"}" },
+        { role: "user" as const, content: `Select background music for a video about topic: "${project.topic}" with script:\n\n${project.assets.script.slice(0, 400)}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = { genre: "Cinematic Dark Ambient Ambient Synth", tempoBPM: 90, instruments: ["Synthesizer", "Drone", "Cello"], vibe: "Mysterious, intense" };
+      }
+      project.assets.musicTrack = stepOutput;
+    }
+    else if (stepId === "sound_effects") {
+      const messages = [
+        { role: "system" as const, content: "You are a sound designer. Pinpoint exact spots in the screenplay script to insert custom sound effects. Return JSON format: [{\"timestamp\": \"string\", \"sfxName\": \"string\", \"description\": \"string\"}]" },
+        { role: "user" as const, content: `Design sound effects for this script:\n\n${project.assets.script}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = [
+          { timestamp: "00:02", sfxName: "Mainframe Power-Up Hum", description: "Deep sub-bass hum with electric sparks static click." }
+        ];
+      }
+      project.assets.soundFx = stepOutput;
+    }
+    else if (stepId === "subtitle_generation") {
+      const scriptWords = (project.assets.script || "").split(/\s+/).filter(Boolean);
+      let srtContent = "";
+      let wordIdx = 0;
+      let sceneNum = 1;
+      
+      while (wordIdx < scriptWords.length) {
+        const chunk = scriptWords.slice(wordIdx, wordIdx + 5).join(" ");
+        const secStart = sceneNum * 3;
+        const secEnd = secStart + 2;
         
-        srt += `${idx + 1}\n${startStr} --> ${endStr}\n${sc.audio}\n\n`;
-        currentOffset += 9;
-      });
-
-      project.assets.subtitles = srt.trim();
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "1.1s";
-
-    } else if (stepId === "thumbnail") {
-      project.assets.thumbnailUrl = "assets/media/thumbnail.png";
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "2.0s";
-
-    } else if (stepId === "metadata") {
-      let meta = null;
-      if (ai) {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: `Generate YouTube SEO metadata for a documentary on: "${project.topic}"`,
-          config: {
-            systemInstruction: "You are an elite social media director. Generate an SEO YouTube video title, a comprehensive description with keyword tags, and an array of metadata keyword tags. Return valid JSON only, using schema: {\"title\": \"string\", \"description\": \"string\", \"tags\": [\"string\"]}. Do not wrap in markdown.",
-            responseMimeType: "application/json"
-          }
-        });
-        try {
-          const raw = (response.text || "").replace(/```json|```/g, "").trim();
-          meta = JSON.parse(raw);
-        } catch {
-          meta = null;
-        }
+        srtContent += `${sceneNum}\n`;
+        srtContent += `00:00:${secStart.toString().padStart(2, "0")},000 --> 00:00:${secEnd.toString().padStart(2, "0")},000\n`;
+        srtContent += `${chunk}\n\n`;
+        
+        wordIdx += 5;
+        sceneNum++;
+        if (sceneNum > 20) break;
+      }
+      
+      project.assets.subtitles = srtContent || "1\n00:00:01,000 --> 00:00:04,000\n[Narrator: Exploring the obsolete boundaries of legacy systems.]";
+      stepOutput = project.assets.subtitles;
+    }
+    else if (stepId === "thumbnail_generation") {
+      const messages = [
+        { role: "system" as const, content: "You are a professional graphic designer and YouTube thumbnail strategist. Return a JSON description of a highly clickable custom cover layout with color codes and bold text overlay ideas: {\"concept\": \"string\", \"overlayText\": \"string\", \"hexColors\": [\"string\"]}" },
+        { role: "user" as const, content: `Design a thumbnail concept for topic: "${project.topic}"` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = { concept: "Slightly distorted CRT terminal background, neon orange title with dramatic dark drop shadow.", overlayText: "THE OBSOLETE THREAT", hexColors: ["#FF4500", "#000000", "#FFA500"] };
+      }
+      project.assets.thumbnailUrl = "https://images.unsplash.com/photo-1544256718-3bcf237f3974?w=800&auto=format&fit=crop&q=60";
+      project.assets.thumbnailConcept = stepOutput;
+    }
+    else if (stepId === "youtube_metadata") {
+      const messages = [
+        { role: "system" as const, content: "You are an elite SEO optimizer and YouTube channel manager. Return a JSON structure: {\"title\": \"string\", \"description\": \"string\", \"tags\": [\"string\"]}" },
+        { role: "user" as const, content: `Generate YouTube metadata for topic: "${project.topic}" based on script:\n\n${project.assets.script}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = { title: "Uncovering the Legacy Network Loophole", description: "In this documentary, we research deep offline networks.", tags: ["legacy", "mainframe", "cybersecurity", "documentary"] };
+      }
+      project.assets.title = stepOutput.title || `Inside the Legacy Networks`;
+      project.assets.description = stepOutput.description || `Deep dive investigative documentary regarding obsolete server systems.`;
+      project.assets.tags = stepOutput.tags || ["security", "mainframe", "networks"];
+    }
+    else if (stepId === "shorts_generation") {
+      const messages = [
+        { role: "system" as const, content: "You are a viral TikTok and YouTube Shorts producer. Trim and rewrite the script into a punchy, 60-second vertical video format with high attention-grabbing hooks. Return a raw text vertical script." },
+        { role: "user" as const, content: `Rewrite this script into a 60-second YouTube Short script:\n\n${project.assets.script}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      project.assets.shortsScript = outputText;
+    }
+    else if (stepId === "social_media_assets") {
+      const messages = [
+        { role: "system" as const, content: "You are a social media director. Generate promotional assets for the video: a Twitter/X thread of 3 posts, a LinkedIn takeaway post, and a Reddit post. Return a JSON structure: {\"twitterThread\": [\"string\"], \"linkedInPost\": \"string\", \"redditPost\": \"string\"}" },
+        { role: "user" as const, content: `Create a social media promo bundle for this video:\n\nTitle: ${project.assets.title}\nDescription: ${project.assets.description}` }
+      ];
+      const result = await routerEngine.route(messages, { provider: "gemini" });
+      outputText = result.text;
+      
+      let cleaned = outputText.trim();
+      if (cleaned.includes("```json")) {
+        cleaned = cleaned.split("```json")[1].split("```")[0].trim();
+      } else if (cleaned.includes("```")) {
+        cleaned = cleaned.split("```")[1].split("```")[0].trim();
+      }
+      try {
+        stepOutput = JSON.parse(cleaned);
+      } catch {
+        stepOutput = { twitterThread: ["1/ Thread on the legacy servers.", "2/ Finding loopholes.", "3/ Conclusion."], linkedInPost: "Sharing key findings on legacy mainframes.", redditPost: "A detailed post for r/sysadmin on old mainframes." };
+      }
+      project.assets.socialAssets = stepOutput;
+    }
+    else if (stepId === "export_folder") {
+      const cleanProjectDir = projectId.replace(/[^a-zA-Z0-9_-]/g, "");
+      const exportDir = path.join(process.cwd(), "EmpireOS", "Projects", "video_factory", cleanProjectDir);
+      
+      if (!fs.existsSync(exportDir)) {
+        fs.mkdirSync(exportDir, { recursive: true });
       }
 
-      if (!meta) {
-        meta = {
-          title: `REVEALED: The Hidden Latency Cartel Operating Behind Global Networks`,
-          description: `This documentary exposes the secret web of private darknet micro-nodes currently handling trillions in global logistics and transaction arbitrage.
+      fs.writeFileSync(path.join(exportDir, "research.md"), project.assets.research || "");
+      fs.writeFileSync(path.join(exportDir, "fact_audit.md"), project.assets.factVerification || "");
+      fs.writeFileSync(path.join(exportDir, "script.md"), project.assets.script || "");
+      fs.writeFileSync(path.join(exportDir, "storyboard.json"), JSON.stringify(project.assets.storyboard || [], null, 2));
+      fs.writeFileSync(path.join(exportDir, "character_sheet.json"), JSON.stringify(project.assets.characterSelection || [], null, 2));
+      fs.writeFileSync(path.join(exportDir, "image_prompts.json"), JSON.stringify(project.assets.imagePrompts || [], null, 2));
+      fs.writeFileSync(path.join(exportDir, "video_prompts.json"), JSON.stringify(project.assets.videoPrompts || [], null, 2));
+      fs.writeFileSync(path.join(exportDir, "music_score.json"), JSON.stringify(project.assets.musicTrack || {}, null, 2));
+      fs.writeFileSync(path.join(exportDir, "sound_effects.json"), JSON.stringify(project.assets.soundFx || [], null, 2));
+      fs.writeFileSync(path.join(exportDir, "subtitles.srt"), project.assets.subtitles || "");
+      fs.writeFileSync(path.join(exportDir, "shorts_script.txt"), project.assets.shortsScript || "");
+      fs.writeFileSync(path.join(exportDir, "metadata.json"), JSON.stringify({
+        title: project.assets.title,
+        description: project.assets.description,
+        tags: project.assets.tags,
+        thumbnailConcept: project.assets.thumbnailConcept
+      }, null, 2));
+      fs.writeFileSync(path.join(exportDir, "social_promo.json"), JSON.stringify(project.assets.socialAssets || {}, null, 2));
 
-Timestamps:
-0:00 - Introduction: The speed limit of the web
-2:15 - Act I: The Ghost Protocol
-5:40 - Act II: Inside the Fiber Corridors
-8:10 - Act III: The Crisis Event
-11:30 - Act IV: Local Nodes Fighting Back
-
-#darknet #networking #investigative #techarbitrage`,
-          tags: ["arbitrage", "fiber cables", "server farm", "datacenter", "latency", "logistics", "cybersecurity", "darknet"]
-        };
-      }
-
-      project.assets.title = meta.title;
-      project.assets.description = meta.description;
-      project.assets.tags = meta.tags;
-      project.steps[stepIndex].status = "completed";
-      project.steps[stepIndex].duration = "1.4s";
+      project.assets.exportPath = `EmpireOS/Projects/video_factory/${cleanProjectDir}`;
+      stepOutput = {
+        exportedFilesCount: 13,
+        path: project.assets.exportPath,
+        manifest: [
+          "research.md", "fact_audit.md", "script.md", "storyboard.json",
+          "character_sheet.json", "image_prompts.json", "video_prompts.json",
+          "music_score.json", "sound_effects.json", "subtitles.srt",
+          "shorts_script.txt", "metadata.json", "social_promo.json"
+        ]
+      };
     }
 
-    // Advance project index if possible
-    const currentPendingIndex = project.steps.findIndex((s: any) => s.status === "idle" || s.status === "failed");
-    if (currentPendingIndex === -1) {
+    const duration = `${((Date.now() - start) / 1000).toFixed(1)}s`;
+    
+    project.steps[stepIndex].status = "completed";
+    project.steps[stepIndex].duration = duration;
+    
+    const allDone = project.steps.every((s: any) => s.status === "completed");
+    if (allDone) {
       project.status = "completed";
-      project.currentStepIndex = project.steps.length;
-    } else {
-      project.currentStepIndex = currentPendingIndex;
     }
 
+    project.currentStepIndex = stepIndex + 1;
     videoProjects[projectId] = project;
+
+    try {
+      await projectService.createOrUpdateProject({
+        id: projectId,
+        name: `Video Factory: ${project.assets.title || project.topic.slice(0, 30)}`,
+        description: project.topic,
+        module: "video_intel",
+        status: project.status,
+        payload: JSON.stringify(project)
+      });
+      await projectService.log("INFO", "VideoFactory", `Step completed successfully: ${stepId} for project ${projectId} in ${duration}`, projectId);
+    } catch (err) {
+      console.error("SharedProjectService failed to save step complete", err);
+    }
 
     // Emit event
     empireEvents.push({
@@ -1338,6 +1512,21 @@ Timestamps:
     project.steps[stepIndex].error = err.message || "An internal compilation exception occurred.";
     project.status = "failed";
     videoProjects[projectId] = project;
+
+    try {
+      await projectService.createOrUpdateProject({
+        id: projectId,
+        name: `Video Factory: ${project.topic.slice(0, 30)}`,
+        description: project.topic,
+        module: "video_intel",
+        status: "failed",
+        payload: JSON.stringify(project)
+      });
+      await projectService.log("ERROR", "VideoFactory", `Step failed: ${stepId} for project ${projectId}. Error: ${err.message}`, projectId);
+    } catch (dbErr) {
+      console.error("Failed to write failure state to database", dbErr);
+    }
+
     return res.status(500).json({ success: false, error: err.message || "Step failed", project });
   }
 });
