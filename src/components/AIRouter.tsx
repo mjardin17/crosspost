@@ -34,17 +34,36 @@ interface QueueItem {
   id: string;
   task: string;
   priority: number;
-  status: "Pending" | "Completed";
+  status: "Pending" | "Completed" | "Processing" | "Failed";
   recommended_ai: string;
   timestamp: string;
+  attempts?: number;
+  error_message?: string;
+  result_text?: string;
+  completed_at?: string;
+}
+
+interface SystemLogItem {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR" | "DEBUG";
+  module: string;
+  message: string;
+  details?: string;
 }
 
 export default function AIRouter() {
-  const [activeTab, setActiveTab] = useState<"playground" | "providers" | "queue" | "history">("playground");
+  const [activeTab, setActiveTab] = useState<"playground" | "providers" | "queue" | "history" | "logs">("playground");
   const [loading, setLoading] = useState<boolean>(false);
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [jobs, setJobs] = useState<RouterJob[]>([]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  
+  // Logs states
+  const [logs, setLogs] = useState<SystemLogItem[]>([]);
+  const [logFilter, setLogFilter] = useState<string>("");
+  const [logLevel, setLogLevel] = useState<string>("ALL");
+  const [fetchingLogs, setFetchingLogs] = useState<boolean>(false);
   
   // Playground states
   const [selectedPreset, setSelectedPreset] = useState<string>("");
@@ -107,8 +126,57 @@ export default function AIRouter() {
     }
   };
 
+  const fetchLogs = async () => {
+    setFetchingLogs(true);
+    try {
+      const response = await fetch("/api/system/logs?limit=150");
+      const data = await response.json();
+      if (data.success) {
+        setLogs(data.logs);
+      }
+    } catch (err) {
+      console.error("Failed to load system logs:", err);
+    } finally {
+      setFetchingLogs(false);
+    }
+  };
+
+  const handleClearLogs = async () => {
+    try {
+      const response = await fetch("/api/system/logs", { method: "DELETE" });
+      const data = await response.json();
+      if (data.success) {
+        fetchLogs();
+      }
+    } catch (err) {
+      console.error("Failed to clear system logs:", err);
+    }
+  };
+
+  const handleRetryJob = async (jobId: string) => {
+    try {
+      const response = await fetch(`/api/empire/ai-router/queue/retry/${jobId}`, {
+        method: "POST"
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchAllData();
+        fetchLogs();
+      }
+    } catch (err) {
+      console.error("Failed to retry job:", err);
+    }
+  };
+
   useEffect(() => {
     fetchAllData();
+    fetchLogs();
+
+    const interval = setInterval(() => {
+      fetchAllData();
+      fetchLogs();
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   const handlePresetSelect = (text: string) => {
@@ -427,6 +495,16 @@ export default function AIRouter() {
           }`}
         >
           📊 Routing History ({jobs.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("logs")}
+          className={`px-4 py-2 text-xs font-mono font-bold uppercase transition border-b-2 cursor-pointer flex items-center gap-1.5 ${
+            activeTab === "logs"
+              ? "border-amber-500 text-amber-400"
+              : "border-transparent text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          🗃️ Central System Logs ({logs.length})
         </button>
       </div>
 
@@ -943,7 +1021,15 @@ export default function AIRouter() {
                     {queue.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-zinc-900 border border-zinc-850 rounded-lg p-3.5 flex justify-between items-start gap-4 hover:border-zinc-750 transition"
+                        className={`bg-zinc-900 border rounded-lg p-3.5 flex justify-between items-start gap-4 hover:border-zinc-750 transition ${
+                          item.status === "Completed"
+                            ? "border-emerald-950/80 hover:border-emerald-800"
+                            : item.status === "Failed"
+                            ? "border-rose-950/85 hover:border-rose-800"
+                            : item.status === "Processing"
+                            ? "border-amber-500/50 hover:border-amber-500"
+                            : "border-zinc-850"
+                        }`}
                       >
                         <div className="space-y-1.5 min-w-0 flex-grow">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -959,6 +1045,17 @@ export default function AIRouter() {
                             }`}>
                               Priority {item.priority}
                             </span>
+                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                              item.status === "Completed"
+                                ? "bg-emerald-950/40 border border-emerald-900 text-emerald-400"
+                                : item.status === "Failed"
+                                ? "bg-rose-950/40 border border-rose-900 text-rose-400"
+                                : item.status === "Processing"
+                                ? "bg-amber-950/40 border border-amber-900 text-amber-400 animate-pulse"
+                                : "bg-zinc-950 border border-zinc-800 text-slate-400"
+                            }`}>
+                              Status: {item.status}
+                            </span>
                             <span className="text-[9px] font-mono text-indigo-400 uppercase">
                               🎯 Model Target: {item.recommended_ai}
                             </span>
@@ -966,9 +1063,36 @@ export default function AIRouter() {
                           <p className="text-[11.5px] font-mono text-slate-200 leading-normal break-words whitespace-pre-wrap">
                             {item.task}
                           </p>
+                          {item.status === "Failed" && item.error_message && (
+                            <div className="bg-rose-950/20 border border-rose-900/40 rounded p-2.5 mt-2">
+                              <span className="text-[9px] font-mono text-rose-400 font-bold block uppercase">Execution Error:</span>
+                              <p className="text-[11px] font-mono text-rose-300 leading-normal">{item.error_message}</p>
+                            </div>
+                          )}
+                          {item.status === "Completed" && item.result_text && (
+                            <div className="bg-emerald-950/10 border border-emerald-950/60 rounded p-2.5 mt-2">
+                              <span className="text-[9px] font-mono text-emerald-400 font-bold block uppercase">Output Result:</span>
+                              <p className="text-[11px] font-mono text-slate-300 leading-relaxed whitespace-pre-wrap mt-1">{item.result_text}</p>
+                            </div>
+                          )}
                           <span className="text-[8px] font-mono text-slate-500 block">
                             Queued at: {new Date(item.timestamp).toLocaleString()}
                           </span>
+                        </div>
+                        <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                          {item.status === "Failed" && (
+                            <button
+                              onClick={() => handleRetryJob(item.id)}
+                              className="bg-rose-650 hover:bg-rose-550 text-white font-mono text-[9px] font-black uppercase px-2.5 py-1 rounded transition cursor-pointer flex items-center gap-1"
+                            >
+                              <RefreshCw className="w-3 h-3 animate-spin" style={{ animationDuration: '3s' }} /> RETRY JOB
+                            </button>
+                          )}
+                          {item.attempts !== undefined && item.attempts > 0 && (
+                            <span className="text-[8px] font-mono text-slate-500">
+                              Attempts: {item.attempts}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1050,6 +1174,108 @@ export default function AIRouter() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* TAB 5: CENTRAL SYSTEM LOGS */}
+          {activeTab === "logs" && (
+            <motion.div
+              key="logs"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
+              <div className="bg-zinc-950/40 border border-zinc-850 rounded-lg p-5 space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-850 pb-4">
+                  <div>
+                    <h4 className="text-xs font-bold font-mono text-slate-200 uppercase">Centralized System Audit & Logs</h4>
+                    <p className="text-[10px] font-mono text-slate-500 mt-0.5">Real-time telemetry and error capturing across all subsystems</p>
+                  </div>
+                  <div className="flex items-center gap-3 w-full md:w-auto">
+                    {/* Search log field */}
+                    <input
+                      type="text"
+                      value={logFilter}
+                      onChange={(e) => setLogFilter(e.target.value)}
+                      placeholder="Search message, module..."
+                      className="bg-zinc-900 border border-zinc-850 rounded px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder-zinc-700 focus:outline-none focus:border-amber-500 min-w-[180px]"
+                    />
+                    {/* Log level filter */}
+                    <select
+                      value={logLevel}
+                      onChange={(e) => setLogLevel(e.target.value)}
+                      className="bg-zinc-900 border border-zinc-850 rounded p-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="ALL">All Levels</option>
+                      <option value="INFO">INFO</option>
+                      <option value="WARN">WARN</option>
+                      <option value="ERROR">ERROR</option>
+                      <option value="DEBUG">DEBUG</option>
+                    </select>
+
+                    <button
+                      onClick={handleClearLogs}
+                      className="bg-rose-950/40 hover:bg-rose-900 border border-rose-900 text-rose-400 font-mono text-[9px] font-black uppercase px-2.5 py-1.5 rounded cursor-pointer transition flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" /> Clear Logs
+                    </button>
+                  </div>
+                </div>
+
+                {fetchingLogs && logs.length === 0 ? (
+                  <div className="text-center py-16 text-zinc-650 italic text-xs font-mono">
+                    Polling centralized log server...
+                  </div>
+                ) : logs.length === 0 ? (
+                  <div className="text-center py-16 text-zinc-650 italic text-xs font-mono">
+                    No logs enregistered in SQLite logging table yet.
+                  </div>
+                ) : (
+                  <div className="bg-black/60 border border-zinc-850 rounded-lg p-3.5 max-h-[450px] overflow-y-auto font-mono text-xs space-y-2 leading-relaxed">
+                    {logs
+                      .filter(log => logLevel === "ALL" || log.level === logLevel)
+                      .filter(log => {
+                        if (!logFilter) return true;
+                        const f = logFilter.toLowerCase();
+                        return (
+                          log.message?.toLowerCase().includes(f) ||
+                          log.module?.toLowerCase().includes(f) ||
+                          log.id?.toLowerCase().includes(f)
+                        );
+                      })
+                      .map((log) => (
+                        <div key={log.id} className="flex items-start gap-3 border-b border-zinc-900/40 pb-2 hover:bg-zinc-900/20 px-2 rounded py-1">
+                          <span className="text-[10px] text-slate-500 whitespace-nowrap">
+                            [{new Date(log.timestamp).toLocaleTimeString()}]
+                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap ${
+                            log.level === "ERROR"
+                              ? "bg-rose-950/60 border border-rose-900 text-rose-400"
+                              : log.level === "WARN"
+                              ? "bg-amber-950/60 border border-amber-900 text-amber-400"
+                              : log.level === "INFO"
+                              ? "bg-indigo-950/60 border border-indigo-900 text-indigo-400"
+                              : "bg-zinc-950 border border-zinc-800 text-slate-400"
+                          }`}>
+                            {log.level}
+                          </span>
+                          <span className="text-amber-500/80 font-bold whitespace-nowrap">
+                            [{log.module}]
+                          </span>
+                          <div className="flex-grow min-w-0">
+                            <span className="text-slate-300 break-words">{log.message}</span>
+                            {log.details && (
+                              <pre className="mt-1 text-[10px] text-slate-500 bg-zinc-950/60 p-2 rounded border border-zinc-900/80 overflow-x-auto whitespace-pre-wrap break-all">
+                                {log.details}
+                              </pre>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>

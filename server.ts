@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import AdmZip from "adm-zip";
 import sqlite3 from "sqlite3";
 import { AIRouterEngine } from "./src/services/AIRouterEngine.ts";
+import { SharedProjectService } from "./src/services/SharedProjectService.ts";
 
 dotenv.config();
 
@@ -3066,6 +3067,86 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
 });
 
 const routerEngine = new AIRouterEngine(db, "http://127.0.0.1:11434");
+const projectService = new SharedProjectService(db);
+
+async function processNextRouterQueueJob() {
+  db.get("SELECT * FROM ai_router_queue WHERE status = 'Pending' ORDER BY priority ASC, timestamp ASC LIMIT 1", async (err, row: any) => {
+    if (err || !row) return;
+
+    // Mark as Processing
+    db.run("UPDATE ai_router_queue SET status = 'Processing', attempts = attempts + 1 WHERE id = ?", [row.id], async (updateErr) => {
+      if (updateErr) return;
+
+      try {
+        console.log(`[BACKGROUND JOB QUEUE] Processing job ${row.id}: "${row.task.slice(0, 50)}..."`);
+        await projectService.log("INFO", "JobQueue", `Job ${row.id} started execution: "${row.task.slice(0, 100)}..."`);
+        
+        // Log start event to the bus
+        try {
+          empireEvents.push({
+            id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date().toISOString(),
+            source: "empire.ai_router.queue",
+            type: "queue.task_processing",
+            payload: { queueId: row.id, task: row.task }
+          });
+        } catch (e) {}
+
+        const result = await routerEngine.route([{ role: "user", content: row.task }], {
+          provider: row.recommended_ai !== "Auto Recommendation" && row.recommended_ai !== "Auto Recommend" ? row.recommended_ai : undefined
+        });
+
+        if (result.success) {
+          db.run(
+            "UPDATE ai_router_queue SET status = 'Completed', result_text = ?, completed_at = ? WHERE id = ?",
+            [result.text, new Date().toISOString(), row.id],
+            async () => {
+              await projectService.log("INFO", "JobQueue", `Job ${row.id} completed successfully.`);
+              // Log complete event to the bus
+              try {
+                empireEvents.push({
+                  id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+                  timestamp: new Date().toISOString(),
+                  source: "empire.ai_router.queue",
+                  type: "queue.task_processed",
+                  payload: { queueId: row.id, task: row.task, success: true }
+                });
+              } catch (e) {}
+            }
+          );
+        } else {
+          throw new Error("AI Routing returned unsuccessful response");
+        }
+      } catch (runErr: any) {
+        const errorMsg = runErr.message || "Unknown routing failure";
+        console.error(`[BACKGROUND JOB QUEUE] Job ${row.id} failed:`, errorMsg);
+        await projectService.log("ERROR", "JobQueue", `Job ${row.id} failed to execute: ${errorMsg}`);
+        
+        db.run(
+          "UPDATE ai_router_queue SET status = 'Failed', error_message = ? WHERE id = ?",
+          [errorMsg, row.id],
+          () => {
+            // Log failure event to the bus
+            try {
+              empireEvents.push({
+                id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+                timestamp: new Date().toISOString(),
+                source: "empire.ai_router.queue",
+                type: "queue.task_failed",
+                payload: { queueId: row.id, error: errorMsg }
+              });
+            } catch (e) {}
+          }
+        );
+      }
+    });
+  });
+}
+
+// Background scheduler worker checking every 5 seconds
+setInterval(() => {
+  processNextRouterQueueJob().catch(() => {});
+}, 5000);
 
 function initDatabase() {
   db.serialize(() => {
@@ -3133,6 +3214,51 @@ function initDatabase() {
     `, (err) => {
       if (err) {
         console.error("Failed to create ai_router_queue table:", err);
+      } else {
+        const queueColumns = [
+          { name: "attempts", type: "INTEGER DEFAULT 0" },
+          { name: "error_message", type: "TEXT" },
+          { name: "result_text", type: "TEXT" },
+          { name: "completed_at", type: "TEXT" },
+          { name: "payload", type: "TEXT" }
+        ];
+        queueColumns.forEach(col => {
+          db.run(`ALTER TABLE ai_router_queue ADD COLUMN ${col.name} ${col.type}`, (alterErr) => {
+            // Ignore duplicate column errors silently
+          });
+        });
+      }
+    });
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS shared_projects (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        description TEXT,
+        module TEXT,
+        status TEXT,
+        payload TEXT,
+        created_at TEXT,
+        updated_at TEXT
+      )
+    `, (err) => {
+      if (err) {
+        console.error("Failed to create shared_projects table:", err);
+      }
+    });
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS system_logs (
+        id TEXT PRIMARY KEY,
+        timestamp TEXT,
+        level TEXT,
+        module TEXT,
+        message TEXT,
+        details TEXT
+      )
+    `, (err) => {
+      if (err) {
+        console.error("Failed to create system_logs table:", err);
       }
     });
 
@@ -3760,7 +3886,7 @@ app.get("/api/empire/ai-router/jobs", (req, res) => {
 
 // GET /api/empire/ai-router/queue - Fetch active task queue
 app.get("/api/empire/ai-router/queue", (req, res) => {
-  db.all("SELECT * FROM ai_router_queue WHERE status = 'Pending' ORDER BY priority ASC, timestamp ASC", (err, rows: any[]) => {
+  db.all("SELECT * FROM ai_router_queue ORDER BY CASE status WHEN 'Processing' THEN 1 WHEN 'Pending' THEN 2 WHEN 'Failed' THEN 3 ELSE 4 END, priority ASC, timestamp DESC", (err, rows: any[]) => {
     if (err) {
       return res.status(500).json({ success: false, error: err.message });
     }
@@ -3807,8 +3933,8 @@ app.post("/api/empire/ai-router/queue", (req, res) => {
 });
 
 // POST /api/empire/ai-router/queue/process - Process next queue item
-app.post("/api/empire/ai-router/queue/process", (req, res) => {
-  db.get("SELECT * FROM ai_router_queue WHERE status = 'Pending' ORDER BY priority ASC, timestamp ASC LIMIT 1", (err, row: any) => {
+app.post("/api/empire/ai-router/queue/process", async (req, res) => {
+  db.get("SELECT * FROM ai_router_queue WHERE status = 'Pending' ORDER BY priority ASC, timestamp ASC LIMIT 1", async (err, row: any) => {
     if (err) {
       return res.status(500).json({ success: false, error: err.message });
     }
@@ -3816,28 +3942,205 @@ app.post("/api/empire/ai-router/queue/process", (req, res) => {
       return res.json({ success: true, message: "Task queue is currently empty." });
     }
 
-    db.run("UPDATE ai_router_queue SET status = 'Completed' WHERE id = ?", [row.id], (updateErr) => {
+    db.run("UPDATE ai_router_queue SET status = 'Processing', attempts = attempts + 1 WHERE id = ?", [row.id], async (updateErr) => {
       if (updateErr) {
         return res.status(500).json({ success: false, error: updateErr.message });
       }
 
-      // Log process dispatch to events
       try {
-        empireEvents.push({
-          id: `evt_${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date().toISOString(),
-          source: "empire.ai_router.queue",
-          type: "queue.task_processed",
-          payload: { queueId: row.id, task: row.task }
-        });
-      } catch (e) {}
+        await projectService.log("INFO", "JobQueue", `Job ${row.id} started execution: "${row.task.slice(0, 100)}..."`);
+        
+        // Log start event to the bus
+        try {
+          empireEvents.push({
+            id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date().toISOString(),
+            source: "empire.ai_router.queue",
+            type: "queue.task_processing",
+            payload: { queueId: row.id, task: row.task }
+          });
+        } catch (e) {}
 
-      return res.json({
-        success: true,
-        processedItem: row
-      });
+        const result = await routerEngine.route([{ role: "user", content: row.task }], {
+          provider: row.recommended_ai !== "Auto Recommendation" && row.recommended_ai !== "Auto Recommend" ? row.recommended_ai : undefined
+        });
+
+        if (result.success) {
+          db.run(
+            "UPDATE ai_router_queue SET status = 'Completed', result_text = ?, completed_at = ? WHERE id = ?",
+            [result.text, new Date().toISOString(), row.id],
+            async () => {
+              await projectService.log("INFO", "JobQueue", `Job ${row.id} completed successfully.`);
+              // Log complete event to the bus
+              try {
+                empireEvents.push({
+                  id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+                  timestamp: new Date().toISOString(),
+                  source: "empire.ai_router.queue",
+                  type: "queue.task_processed",
+                  payload: { queueId: row.id, task: row.task, success: true }
+                });
+              } catch (e) {}
+
+              return res.json({
+                success: true,
+                processedItem: { ...row, status: "Completed", result_text: result.text }
+              });
+            }
+          );
+        } else {
+          throw new Error("AI Routing returned unsuccessful response");
+        }
+      } catch (runErr: any) {
+        const errorMsg = runErr.message || "Unknown routing failure";
+        await projectService.log("ERROR", "JobQueue", `Job ${row.id} failed to execute: ${errorMsg}`);
+        
+        db.run(
+          "UPDATE ai_router_queue SET status = 'Failed', error_message = ? WHERE id = ?",
+          [errorMsg, row.id],
+          () => {
+            // Log failure event to the bus
+            try {
+              empireEvents.push({
+                id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+                timestamp: new Date().toISOString(),
+                source: "empire.ai_router.queue",
+                type: "queue.task_failed",
+                payload: { queueId: row.id, error: errorMsg }
+              });
+            } catch (e) {}
+
+            return res.json({
+              success: false,
+              error: errorMsg,
+              processedItem: { ...row, status: "Failed", error_message: errorMsg }
+            });
+          }
+        );
+      }
     });
   });
+});
+
+// --- UNIFIED PROJECT SERVICE ENDPOINTS ---
+app.get("/api/projects", async (req, res) => {
+  try {
+    const moduleName = req.query.module as string | undefined;
+    const projects = await projectService.getProjects(moduleName);
+    res.json({ success: true, projects });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get("/api/projects/:id", async (req, res) => {
+  try {
+    const project = await projectService.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ success: false, error: "Project not found" });
+    }
+    res.json({ success: true, project });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/projects", async (req, res) => {
+  try {
+    const { id, name, description, module, status, payload } = req.body;
+    if (!id || !name || !module) {
+      return res.status(400).json({ success: false, error: "ID, Name, and Module are required." });
+    }
+    const result = await projectService.createOrUpdateProject({
+      id,
+      name,
+      description: description || "",
+      module,
+      status: status || "active",
+      payload: payload ? (typeof payload === 'string' ? payload : JSON.stringify(payload)) : "{}"
+    });
+    await projectService.log("INFO", "Projects", `Project '${name}' (${id}) saved successfully.`);
+    res.json({ success: true, project: result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/projects/:id", async (req, res) => {
+  try {
+    const { name, description, status, payload } = req.body;
+    const existing = await projectService.getProjectById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: "Project not found" });
+    }
+    const result = await projectService.createOrUpdateProject({
+      id: req.params.id,
+      name: name || existing.name,
+      description: description !== undefined ? description : existing.description,
+      module: existing.module,
+      status: status || existing.status,
+      payload: payload ? (typeof payload === 'string' ? payload : JSON.stringify(payload)) : existing.payload
+    });
+    await projectService.log("INFO", "Projects", `Project '${result.name}' updated successfully.`);
+    res.json({ success: true, project: result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/projects/:id", async (req, res) => {
+  try {
+    await projectService.deleteProject(req.params.id);
+    await projectService.log("INFO", "Projects", `Project with ID ${req.params.id} deleted.`);
+    res.json({ success: true, message: "Project deleted successfully" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/empire/ai-router/queue/retry/:id - Retry a failed AI router job
+app.post("/api/empire/ai-router/queue/retry/:id", (req, res) => {
+  const jobId = req.params.id;
+  db.run("UPDATE ai_router_queue SET status = 'Pending', error_message = '' WHERE id = ?", [jobId], (err) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+    return res.json({ success: true, message: `Job ${jobId} reset to Pending status.` });
+  });
+});
+
+// --- CENTRALIZED SYSTEM LOGS ENDPOINTS ---
+app.get("/api/system/logs", async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+    const level = req.query.level as string | undefined;
+    const logs = await projectService.getLogs(limit, level);
+    res.json({ success: true, logs });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/system/logs", async (req, res) => {
+  try {
+    const { level, module, message, details } = req.body;
+    if (!level || !module || !message) {
+      return res.status(400).json({ success: false, error: "Level, Module, and Message are required." });
+    }
+    await projectService.log(level, module, message, details);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/system/logs", async (req, res) => {
+  try {
+    await projectService.clearLogs();
+    res.json({ success: true, message: "Logs cleared" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // POST /api/empire/ai-router/dispatch - Smart Central Cognitive Routing Engine with Fallback
@@ -4983,6 +5286,25 @@ app.get("/api/crossposter/queue", (req, res) => {
   });
 });
 
+// 9b. POST /api/crossposter/queue/retry/:id - Retry a failed queue job
+app.post("/api/crossposter/queue/retry/:id", (req, res) => {
+  const jobId = req.params.id;
+  db.get("SELECT * FROM crossposter_queue WHERE id = ?", [jobId], (err, row: any) => {
+    if (err || !row) {
+      return res.status(404).json({ success: false, error: "Queue job not found." });
+    }
+    
+    const platformField = `${row.platform.toLowerCase()}_status`;
+    db.serialize(() => {
+      db.run("UPDATE crossposter_queue SET status = 'PENDING', error_message = '', attempts = attempts + 1 WHERE id = ?", [jobId]);
+      db.run(`UPDATE crossposter_inventory SET ${platformField} = 'Pending' WHERE id = ?`, [row.itemId]);
+      db.get("SELECT * FROM crossposter_queue WHERE id = ?", [jobId], (err2, updatedRow) => {
+        return res.json({ success: true, message: `Job ${jobId} reset to Pending status.`, job: updatedRow });
+      });
+    });
+  });
+});
+
 // 10. POST /api/crossposter/queue/process - Run background worker
 app.post("/api/crossposter/queue/process", (req, res) => {
   db.all("SELECT * FROM crossposter_queue WHERE status = 'PENDING'", (err, queueItems: any[]) => {
@@ -5010,29 +5332,49 @@ app.post("/api/crossposter/queue/process", (req, res) => {
           }
 
           const platform = item.platform;
-          const statusField = `${platform}_status`;
-          
-          if (item.action === "LIST") {
-            const finalStatus = "Listed";
-            db.run(`UPDATE crossposter_inventory SET ${statusField} = ?, status = 'Active', views = views + ? WHERE id = ?`, [finalStatus, Math.floor(Math.random() * 12) + 5, item.itemId], () => {
-              db.run("UPDATE crossposter_queue SET status = 'COMPLETED', timestamp = ? WHERE id = ?", [now, item.id], () => {
-                logs.push(`[LISTED] successfully published item "${product.title}" to marketplace platform: ${platform.toUpperCase()}`);
-                completedCount++;
-                resolve();
+          const statusField = `${platform.toLowerCase()}_status`;
+
+          // Check if this platform channel is connected in crossposter_connections
+          db.get("SELECT status FROM crossposter_connections WHERE platform = ?", [platform.toLowerCase()], (connErr, conn: any) => {
+            const isConnected = conn && conn.status === "Connected";
+            
+            if (item.action === "LIST" && !isConnected) {
+              const errMsg = `Authentication failed: Channel ${platform.toUpperCase()} is Disconnected. Connect store in connections panel first.`;
+              db.run(
+                "UPDATE crossposter_queue SET status = 'FAILED', error_message = ?, attempts = attempts + 1 WHERE id = ?",
+                [errMsg, item.id],
+                () => {
+                  db.run(`UPDATE crossposter_inventory SET ${statusField} = 'Failed' WHERE id = ?`, [item.itemId], () => {
+                    logs.push(`[FAILED] Task ${item.id} failed: Channel ${platform.toUpperCase()} is disconnected.`);
+                    resolve();
+                  });
+                }
+              );
+              return;
+            }
+
+            if (item.action === "LIST") {
+              const finalStatus = "Listed";
+              db.run(`UPDATE crossposter_inventory SET ${statusField} = ?, status = 'Active', views = views + ? WHERE id = ?`, [finalStatus, Math.floor(Math.random() * 12) + 5, item.itemId], () => {
+                db.run("UPDATE crossposter_queue SET status = 'COMPLETED', timestamp = ? WHERE id = ?", [now, item.id], () => {
+                  logs.push(`[LISTED] successfully published item "${product.title}" to marketplace platform: ${platform.toUpperCase()}`);
+                  completedCount++;
+                  resolve();
+                });
               });
-            });
-          } else if (item.action === "DELIST") {
-            const finalStatus = "Not Listed";
-            db.run(`UPDATE crossposter_inventory SET ${statusField} = ? WHERE id = ?`, [finalStatus, item.itemId], () => {
-              db.run("UPDATE crossposter_queue SET status = 'COMPLETED', timestamp = ? WHERE id = ?", [now, item.id], () => {
-                logs.push(`[DELISTED] automatically delisted item "${product.title}" from ${platform.toUpperCase()} to prevent oversell.`);
-                completedCount++;
-                resolve();
+            } else if (item.action === "DELIST") {
+              const finalStatus = "Not Listed";
+              db.run(`UPDATE crossposter_inventory SET ${statusField} = ? WHERE id = ?`, [finalStatus, item.itemId], () => {
+                db.run("UPDATE crossposter_queue SET status = 'COMPLETED', timestamp = ? WHERE id = ?", [now, item.id], () => {
+                  logs.push(`[DELISTED] automatically delisted item "${product.title}" from ${platform.toUpperCase()} to prevent oversell.`);
+                  completedCount++;
+                  resolve();
+                });
               });
-            });
-          } else {
-            resolve();
-          }
+            } else {
+              resolve();
+            }
+          });
         });
       });
     };

@@ -428,6 +428,24 @@ export default function BossListers() {
     }
   };
 
+  // Retry a failed background queue job
+  const handleRetryJob = async (id: string) => {
+    setTerminalLogs(prev => [`[QUEUE WORKER] Preparing to retry job ${id}...`, ...prev]);
+    try {
+      const response = await fetch(`/api/crossposter/queue/retry/${id}`, { method: "POST" });
+      const data = await response.json();
+      if (data.success) {
+        setTerminalLogs(prev => [`[QUEUE WORKER] Reset job status to Pending successfully. Ready to run!`, ...prev]);
+        loadAllData();
+      } else {
+        setTerminalLogs(prev => [`[QUEUE ERROR] Failed to reset job status: ${data.error}`, ...prev]);
+      }
+    } catch (err) {
+      console.error(err);
+      setTerminalLogs(prev => [`[QUEUE ERROR] Connection failure while retrying job.`, ...prev]);
+    }
+  };
+
   // Trigger Bulk Import Modal
   const handleBulkImport = () => {
     setIsImportModalOpen(true);
@@ -751,6 +769,7 @@ export default function BossListers() {
       case "Listed": return "bg-emerald-950/60 text-emerald-400 border-emerald-900/30";
       case "Pending": return "bg-amber-950/60 text-amber-400 border-amber-900/30";
       case "Delisting": return "bg-rose-950/60 text-rose-400 border-rose-900/30";
+      case "Failed": return "bg-rose-950/40 text-rose-400 border-rose-900/30";
       default: return "bg-zinc-950 text-slate-500 border-zinc-800/40";
     }
   };
@@ -1155,7 +1174,7 @@ export default function BossListers() {
                       </div>
                     ) : (
                       queue.map(q => (
-                        <div key={q.id} className="p-3 hover:bg-zinc-900/30 flex items-center justify-between">
+                        <div key={q.id} className="p-3 hover:bg-zinc-900/30 flex items-center justify-between border-b border-zinc-900/40 last:border-0">
                           <div className="flex items-center gap-3">
                             <Clock className="w-3.5 h-3.5 text-zinc-500" />
                             <div>
@@ -1165,10 +1184,25 @@ export default function BossListers() {
                               <div className="text-[10px] text-slate-500 mt-0.5">
                                 SKU / Item ID: {q.itemId} • {new Date(q.timestamp).toLocaleString()}
                               </div>
+                              {q.status === "FAILED" && q.error_message && (
+                                <div className="text-[9px] text-rose-400 bg-rose-950/20 border border-rose-950/40 px-2 py-1.5 rounded mt-1 max-w-lg leading-relaxed font-sans">
+                                  <span className="font-mono font-bold uppercase tracking-wider text-[8px] bg-rose-900 text-rose-200 px-1 py-0.5 rounded mr-1">ERROR</span>
+                                  {q.error_message}
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2">
+                            {q.status === "FAILED" && (
+                              <button
+                                onClick={() => handleRetryJob(q.id)}
+                                className="bg-rose-950 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 px-2 py-0.5 rounded text-[9px] font-mono font-bold transition-all cursor-pointer"
+                                title="Re-submit task to queue with status Pending"
+                              >
+                                RETRY JOB
+                              </button>
+                            )}
                             <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${
                               q.status === "COMPLETED"
                                 ? "bg-emerald-950/50 text-emerald-400 border-emerald-900/30"
