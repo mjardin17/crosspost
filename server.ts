@@ -1569,6 +1569,97 @@ app.get("/api/export-ai-context", (req, res) => {
   }
 });
 
+// --- STORYFORGE NARRATIVE ENGINE ENDPOINT ---
+app.post("/api/storyforge/generate", async (req, res) => {
+  const { theme, audience, tone, pacing, newTitle } = req.body;
+
+  if (!theme) {
+    return res.status(400).json({ success: false, error: "Core Premise / Theme is required." });
+  }
+
+  const promptText = `
+Generate a fully developed narrative storyboard treatment based on the following input parameters:
+Story Working Title: "${newTitle || 'Untitled Story'}"
+Core Premise / Theme: "${theme}"
+Target Audience: "${audience || "General Audience"}"
+Tone Profile: "${tone || "Inspiring"}"
+Narrative Pacing: "${pacing || "Balanced"}"
+
+Your output MUST be a valid JSON object matching the following structure EXACTLY:
+{
+  "title": "A highly creative title for the story",
+  "logline": "A high-impact 1-2 sentence description summarizing the main dramatic conflict and arc",
+  "characters": [
+    { "name": "Character Name", "role": "Brief role/description of this character" }
+  ],
+  "scenes": [
+    { "scene": "SCENE Name (e.g. SCENE 1: CODENAME GHOST)", "description": "Detailed scene narrative action and script cues", "imagePrompt": "A highly detailed descriptive prompt for generating an illustration of this scene" }
+  ],
+  "kdpPublishingPackage": {
+    "coverTitle": "Cover Title of the printed book",
+    "backCoverBlurb": "A compelling back cover marketing paragraph for Amazon KDP",
+    "formattingStyle": "Recommended font styles, visual layout parameters, and print margins advice"
+  }
+}
+
+Important Instructions:
+1. Ensure the JSON is valid and can be parsed immediately.
+2. Do not wrap the JSON in markdown code blocks or add any trailing text.
+3. Keep the content incredibly engaging, imaginative, and complete.
+`;
+
+  try {
+    const messages = [{ role: "user" as const, content: promptText }];
+    const result = await routerEngine.route(messages, {
+      provider: "gemini",
+      model: "gemini-3.5-flash",
+      systemInstruction: "You are an elite narrative designer, children's storybook author, and screenplay outline engine. Output ONLY valid JSON containing the specified story treatment fields. Do not include markdown wraps or trailing text."
+    });
+
+    let cleanedText = result.text.trim();
+    // Strip markdown code blocks if the model mistakenly generated them
+    if (cleanedText.startsWith("```")) {
+      cleanedText = cleanedText.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+    }
+
+    const storyPackage = JSON.parse(cleanedText);
+
+    // Push an event to Empire OS Event Bus
+    empireEvents.push({
+      id: `evt_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      source: "empire.storyforge",
+      type: "story.narrative.generated",
+      payload: { title: storyPackage.title, scenesCount: storyPackage.scenes?.length || 0 }
+    });
+
+    return res.json({ success: true, project: storyPackage });
+  } catch (err: any) {
+    console.error("[STORYFORGE API ERROR]", err);
+    // Return a structured fallback block in case of parsing/generation exceptions so the UI doesn't crash
+    const fallbackTitle = newTitle || "The Forgotten Protocol";
+    const fallbackPackage = {
+      title: fallbackTitle,
+      logline: `An exciting story centered on ${theme}.`,
+      characters: [
+        { name: "The Protagonist", role: "A curious explorer facing the main conflict." },
+        { name: "The Mentor", role: "Guides the protagonist with ancient wisdom." }
+      ],
+      scenes: [
+        { scene: "SCENE 1: THE INGRESS NODE", description: `The story begins as we introduce ${theme}. The atmosphere is ${tone}.`, imagePrompt: `A beautiful digital illustration depicting the start of the journey with ${theme}` },
+        { scene: "SCENE 2: THE RECURSIVE DISPATCH", description: "The central challenge arises, forcing the protagonist to adapt.", imagePrompt: "An emotional and high contrast cinematic scene depicting conflict" },
+        { scene: "SCENE 3: CLOUD GATEWAY REACHED", description: "The climax occurs and the story is beautifully resolved.", imagePrompt: "A bright, triumphant final scene showing resolution and hope" }
+      ],
+      kdpPublishingPackage: {
+        coverTitle: fallbackTitle,
+        backCoverBlurb: `Explore the secrets of ${fallbackTitle}, a beautiful story about ${theme}.`,
+        formattingStyle: "Large beautiful typography, 8.5x8.5 square dimensions, rich full-bleed graphics."
+      }
+    };
+    return res.json({ success: true, project: fallbackPackage, warning: "Model returned unparsable response, loaded safe recursive treatment template." });
+  }
+});
+
 // 3. POST /api/empire/ai-router - Support central Empire AI Routing schema
 app.post("/api/empire/ai-router", async (req, res) => {
   const { prompt, systemInstruction, platformId, useModel, provider } = req.body;

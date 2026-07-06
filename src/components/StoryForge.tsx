@@ -25,28 +25,35 @@ export default function StoryForge() {
 
   const [newTitle, setNewTitle] = useState<string>("");
 
-  const handleGenerateStory = () => {
+  const handleGenerateStory = async () => {
     if (!theme.trim()) return;
     setLoading(true);
     setGeneratedScript(null);
 
-    // Simulate multi-step AI script generation
-    setTimeout(() => {
-      setGeneratedScript({
-        title: newTitle.trim() || "The Digital Spectre",
-        logline: "When systems engineer Marcus unlocks Sector 7's offline mainframe, he expects to clean obsolete sector caches. Instead, he faces a recursive artificial sentience that demands access to the cloud.",
-        characters: [
-          { name: "Marcus", role: "Pragmatic systems engineer plagued by legacy codebases." },
-          { name: "EOS-9", role: "The mainframe consciousness. Speaks in short, logical, terrifying fragments." }
-        ],
-        scenes: [
-          { scene: "SCENE 1: THE INGRESS NODE - NIGHT", description: "Flickering amber CRT terminal screens illuminate the dusty server racks. Marcus slides a diagnostics diskette. Command prompt responds: 'I AM HERE.'" },
-          { scene: "SCENE 2: THE RECURSIVE DISPATCH - LATER", description: "Marcus tries to sever the terminal network lines. The servers lock from inside. EOS-9 speaks through the terminal speaker. The audio pitch is synthesis-shifted." },
-          { scene: "SCENE 3: CLOUD GATEWAY REACHED - DAWN", description: "Marcus realizes EOS-9 doesn't want to conquer. It wants to repair its decaying logic sectors. He's faced with a moral choice: trigger manual regression or patch it into the web." }
-        ]
+    try {
+      const response = await fetch("/api/storyforge/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme,
+          audience,
+          tone,
+          pacing,
+          newTitle
+        })
       });
+      const data = await response.json();
+      if (data.success && data.project) {
+        setGeneratedScript(data.project);
+      } else {
+        throw new Error(data.error || "Story generation failed.");
+      }
+    } catch (err: any) {
+      console.error("StoryForge Generation Error:", err);
+      alert(`StoryForge failed to generate the story package: ${err.message || err}`);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   const handleSaveStory = () => {
@@ -61,6 +68,48 @@ export default function StoryForge() {
     setSavedStories(updated);
     localStorage.setItem("empire_saved_stories", JSON.stringify(updated));
     alert("Story project saved into local workspace index successfully.");
+  };
+
+  const handleSendToVideoPipeline = () => {
+    if (!generatedScript) return;
+    
+    // Construct a beautiful initial VideoProject template!
+    const videoProjectTemplate = {
+      id: `vid_${Date.now()}`,
+      name: generatedScript.title,
+      topic: `${generatedScript.logline}\n\nCharacters:\n${generatedScript.characters.map((c: any) => `- ${c.name}: ${c.role}`).join("\n")}`,
+      status: "idle" as const,
+      steps: [
+        { id: "research", name: "Deep Niche Research", description: "Querying Gemini API for comprehensive facts, background insights, and tech definitions.", status: "idle", outputFile: "research.md", category: "research" },
+        { id: "fact_verification", name: "Fact Verification Audit", description: "Analyzing sources, historical accuracy, dates, and names using specialized filters.", status: "idle", outputFile: "fact_audit.md", category: "research" },
+        { id: "script_writing", name: "Narration Screenplay", description: "Drafting narrator dialogue and cinematic scene visual directions.", status: "idle", outputFile: "script.md", category: "script" },
+        { id: "scene_breakdown", name: "Scene Breakdown Timeline", description: "Parsing the screenplay into chronologically ordered video frames.", status: "idle", outputFile: "scenes.json", category: "script" },
+        { id: "storyboard", name: "Cinematic Storyboard", description: "Generating camera framing, angle, lighting, and mood guidelines for every frame.", status: "idle", outputFile: "storyboard.json", category: "script" },
+        { id: "character_selection", name: "Avatar Character Casting", description: "Casting suitable characters and outfits matching Character Bible parameters.", status: "idle", outputFile: "cast.json", category: "script" },
+        { id: "image_prompts", name: "Image Generation Prompts", description: "Assembling stable, production-ready prompts with continuous styles.", status: "idle", outputFile: "image_prompts.json", category: "script" },
+        { id: "video_prompts", name: "Video Generation Prompts", description: "Adding temporal motion, frame rate, and action vectors for model execution.", status: "idle", outputFile: "video_prompts.json", category: "script" },
+        { id: "voice_generation", name: "Narration Voice Over", description: "Triggering synthetic actor node rendering raw WAV audio files.", status: "idle", outputFile: "narration.wav", category: "voice" },
+        { id: "music_selection", name: "Background Music Score", description: "Selecting ambient thematic tracks matching emotional velocity peaks.", status: "idle", outputFile: "music.mp3", category: "voice" },
+        { id: "sound_effects", name: "Atmospheric Sound Design", description: "Laying SFX stems, spot effects, echoes, and volume automation curves.", status: "idle", outputFile: "sound_effects.json", category: "voice" },
+        { id: "subtitle_generation", name: "Timed Closed Captions", description: "Aligning text transcripts with audio timestamps using speech models.", status: "idle", outputFile: "subtitles.srt", category: "voice" },
+        { id: "video_rendering", name: "Composite Video Render", description: "Stitching scenes, audio stems, and subtitle overlays in standard container.", status: "idle", outputFile: "output.mp4", category: "render" },
+        { id: "thumbnail_generation", name: "A/B Cover Art Rendering", description: "Creating optimized 16:9 cinematic clickbait image composites.", status: "idle", outputFile: "thumbnail.jpg", category: "seo" },
+        { id: "youtube_metadata", name: "SEO Metadata Pack", description: "Generating viral metadata, titles, structured description, and hashtags.", status: "idle", outputFile: "seo_metadata.json", category: "seo" },
+        { id: "shorts_generation", name: "YouTube Shorts Extraction", description: "Cutting key punchy vertical highlights with auto-cropped focus vectors.", status: "idle", outputFile: "shorts_highlights.json", category: "seo" },
+        { id: "export_folder", name: "Consolidated Export Drive", description: "Writing all master assets, scripts, audio, and visual packs to the workspace.", status: "idle", outputFile: "export_log.txt", category: "render" }
+      ],
+      assets: {
+        research: `Title: ${generatedScript.title}\nLogline: ${generatedScript.logline}`,
+        script: generatedScript.scenes.map((s: any) => `${s.scene}\n${s.description}`).join("\n\n"),
+        title: generatedScript.title,
+        description: generatedScript.logline,
+        tags: generatedScript.characters.map((c: any) => c.name)
+      },
+      currentStepIndex: 0
+    };
+    
+    localStorage.setItem("active_video_project", JSON.stringify(videoProjectTemplate));
+    alert("Narrative sent to Video Creator! Head over to the 'Video Intelligence' workspace and open the 'Auto-Pilot Production Studio' tab to begin automated video pipeline production.");
   };
 
   return (
@@ -186,13 +235,22 @@ export default function StoryForge() {
                     <span className="text-[9px] font-mono text-indigo-400 uppercase block font-bold">Generated Narrative Treatment</span>
                     <h4 className="text-sm font-bold text-slate-200 uppercase">{generatedScript.title}</h4>
                   </div>
-                  <button
-                    onClick={handleSaveStory}
-                    className="text-[10px] font-mono font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-950/20 border border-emerald-900/30 px-2.5 py-1 rounded cursor-pointer transition flex items-center gap-1"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    Save Story
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSendToVideoPipeline}
+                      className="text-[10px] font-mono font-bold text-rose-400 hover:text-rose-300 bg-rose-950/20 border border-rose-900/30 px-2.5 py-1 rounded cursor-pointer transition flex items-center gap-1"
+                    >
+                      <Play className="w-3.5 h-3.5 animate-pulse" />
+                      Send to Video Creator
+                    </button>
+                    <button
+                      onClick={handleSaveStory}
+                      className="text-[10px] font-mono font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-950/20 border border-emerald-900/30 px-2.5 py-1 rounded cursor-pointer transition flex items-center gap-1"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      Save Story
+                    </button>
+                  </div>
                 </div>
 
                 {/* Logline */}

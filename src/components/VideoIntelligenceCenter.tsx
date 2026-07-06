@@ -8,6 +8,7 @@ import {
   BookOpen, Star, Calendar, Clock, X, ListTodo, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import VideoCreator from "./VideoCreator";
 
 // --- TYPES ---
 interface Scene {
@@ -667,6 +668,7 @@ You can configure and list these custom systems for a six-hundred dollar margin 
         <div className="flex flex-wrap border-b border-zinc-900 mt-6 gap-1">
           {[
             { id: "projects", label: "Video Projects Directory", icon: Database },
+            { id: "advanced_creator", label: "Auto-Pilot Production Studio", icon: Video },
             { id: "workspace", label: "Factory Workspace", icon: Zap },
             { id: "router", label: "AI Routing Grid", icon: Cpu },
             { id: "timeline", label: "Interactive Scene Timeline", icon: Film },
@@ -784,6 +786,26 @@ You can configure and list these custom systems for a six-hundred dollar margin 
                 })}
               </div>
             </div>
+          )}
+
+          {/* --- TAB: ADVANCED AUTOPILOT CREATOR --- */}
+          {activeTab === "advanced_creator" && (
+            <VideoCreator 
+              onHandToCrossPost={(script, metadata) => {
+                setProjects(prev => prev.map(p => p.id === selectedProjectId ? {
+                  ...p,
+                  script,
+                  titles: [metadata.title],
+                  description: metadata.desc,
+                  tags: metadata.tags,
+                  progress: 100,
+                  status: "Completed"
+                } : p));
+                setPublishTitle(metadata.title);
+                setPublishDesc(metadata.desc);
+                setShowPublishModal(true);
+              }} 
+            />
           )}
 
           {/* --- TAB 2: FACTORY WORKSPACE --- */}

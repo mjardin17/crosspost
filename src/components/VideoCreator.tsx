@@ -59,6 +59,7 @@ export default function VideoCreator({ onHandToCrossPost }: VideoCreatorProps) {
   const [isInitializing, setIsInitializing] = useState<boolean>(false);
   const [activeAssetTab, setActiveAssetTab] = useState<string>("script");
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
+  const [isAutoRunning, setIsAutoRunning] = useState<boolean>(false);
   
   // Editorial state to let users fine-tune generated script & description
   const [editableScript, setEditableScript] = useState<string>("");
@@ -196,6 +197,30 @@ export default function VideoCreator({ onHandToCrossPost }: VideoCreatorProps) {
     }
   };
 
+  // Auto-Pilot Pipeline Automation Layer
+  useEffect(() => {
+    if (!isAutoRunning || !activeProject) return;
+    
+    // If any step is currently running, wait for it to complete.
+    const isAnyStepRunning = activeProject.steps.some(s => s.status === "running");
+    if (isAnyStepRunning) return;
+    
+    // If the project overall has failed, halt auto-run
+    if (activeProject.status === "failed") {
+      setIsAutoRunning(false);
+      return;
+    }
+    
+    // Find the first idle step in sequence
+    const nextIdleStep = activeProject.steps.find(s => s.status === "idle");
+    if (nextIdleStep) {
+      executePipelineStep(nextIdleStep.id);
+    } else {
+      // All steps completed successfully
+      setIsAutoRunning(false);
+    }
+  }, [isAutoRunning, activeProject]);
+
   const handleResetProject = () => {
     if (confirm("Are you sure you want to completely erase the current video project and start over?")) {
       saveProjectState(null);
@@ -285,6 +310,17 @@ export default function VideoCreator({ onHandToCrossPost }: VideoCreatorProps) {
           
           {activeProject && (
             <div className="flex items-center gap-2 shrink-0 font-mono">
+              <button
+                onClick={() => setIsAutoRunning(!isAutoRunning)}
+                className={`px-3 py-1.5 rounded border text-[10px] uppercase font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                  isAutoRunning 
+                    ? "bg-rose-950 border-rose-500 text-rose-400 animate-pulse font-black" 
+                    : "bg-slate-950 border-slate-850 hover:border-slate-700 text-slate-300 hover:text-slate-100"
+                }`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isAutoRunning ? "animate-spin" : ""}`} />
+                <span>{isAutoRunning ? "Stop Auto-Pilot" : "Start Auto-Pilot"}</span>
+              </button>
               <button
                 onClick={handleResetProject}
                 className="px-3 py-1.5 rounded bg-slate-950 border border-slate-850 hover:border-slate-700 text-slate-400 hover:text-slate-200 text-[10px] uppercase font-bold flex items-center gap-1.5 transition cursor-pointer"
