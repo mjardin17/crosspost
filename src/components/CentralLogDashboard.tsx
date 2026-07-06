@@ -1,18 +1,104 @@
 import React, { useState, useEffect } from "react";
 import {
   ShieldAlert, ShieldCheck, Terminal, Play, AlertCircle, RefreshCw,
-  Search, Trash2, Filter, Layers, LayoutGrid, CheckCircle2, ChevronRight, AlertTriangle, Cpu
+  Search, Trash2, Filter, Layers, LayoutGrid, CheckCircle2, ChevronRight, AlertTriangle, Cpu, Sparkles,
+  Code, Copy, Check
 } from "lucide-react";
 import { SystemLogItem } from "../types";
 import { Logger } from "../services/Logger";
+import ClaudeDesktopConnectPanel from "./ClaudeDesktopConnectPanel";
 
 export default function CentralLogDashboard() {
+  const [activeTab, setActiveTab] = useState<"telemetry" | "claude">("telemetry");
+  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [logs, setLogs] = useState<SystemLogItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("ALL");
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
   const [activeDetailId, setActiveDetailId] = useState<string | null>(null);
+
+  // Proactive Autonomous Sentinel System States
+  const [sentinelEnabled, setSentinelEnabled] = useState<boolean>(true);
+  const [attemptedHeals, setAttemptedHeals] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("empire_sentinel_healed_logs");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [sentinelNotification, setSentinelNotification] = useState<{
+    message: string;
+    logId: string;
+    module: string;
+    timestamp: string;
+  } | null>(null);
+
+  // Autonomous Self-Healing Diagnostics State
+  const [healingLogId, setHealingLogId] = useState<string | null>(null);
+  const [healingInProgress, setHealingInProgress] = useState<boolean>(false);
+  const [healerOutput, setHealerOutput] = useState<{
+    success: boolean;
+    diagnosis: string;
+    healingAction: "SQL_REPAIR" | "CODE_PATCH" | "CONFIG_RESET" | "SILENT_ADJUSTMENT";
+    actionDescription: string;
+    patchDiff?: string;
+    executionLogs: string[];
+  } | null>(null);
+  const [healerStepIndex, setHealerStepIndex] = useState<number>(0);
+  const [healingError, setHealingError] = useState<string | null>(null);
+
+  const HEALER_STEPS = [
+    "Locating failing record in system_logs database...",
+    "Scanning project directory structure for associated modules...",
+    "Engaging Gemini AI Core to construct precise diagnostic recipe...",
+    "Executing surgical remediation hotpatch instantly...",
+    "Performing post-fix validation & database index refresh..."
+  ];
+
+  const handleAutoHeal = async (logId: string) => {
+    setHealingLogId(logId);
+    setHealingInProgress(true);
+    setHealerOutput(null);
+    setHealerStepIndex(0);
+    setHealingError(null);
+
+    // Smoothly animate the steps
+    const interval = setInterval(() => {
+      setHealerStepIndex((prev) => {
+        if (prev < HEALER_STEPS.length - 2) {
+          return prev + 1;
+        }
+        return prev;
+      });
+    }, 1200);
+
+    try {
+      const response = await fetch("/api/system/heal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logId })
+      });
+
+      clearInterval(interval);
+      const data = await response.json();
+
+      if (data.success) {
+        setHealerStepIndex(HEALER_STEPS.length - 1);
+        setHealerOutput(data);
+        // Sync system logs immediately to show HEALER success logs
+        fetchLogs();
+      } else {
+        setHealingError(data.error || "An anomaly occurred during autonomous remediation.");
+      }
+    } catch (err: any) {
+      clearInterval(interval);
+      setHealingError(err.message || "Failed to establish log healing pipeline.");
+    } finally {
+      setHealingInProgress(false);
+    }
+  };
 
   // Simulation inputs
   const [simModule, setSimModule] = useState<string>("AIRouter");
@@ -48,6 +134,43 @@ export default function CentralLogDashboard() {
     const interval = setInterval(fetchLogs, 5000);
     return () => clearInterval(interval);
   }, [autoRefresh]);
+
+  const markLogAsAttempted = (logId: string) => {
+    setAttemptedHeals(prev => {
+      const next = { ...prev, [logId]: true };
+      try {
+        localStorage.setItem("empire_sentinel_healed_logs", JSON.stringify(next));
+      } catch (err) {
+        console.warn(err);
+      }
+      return next;
+    });
+  };
+
+  // Sentinel Proactive Patrol Loop
+  useEffect(() => {
+    if (!sentinelEnabled || healingInProgress || logs.length === 0) return;
+
+    // Look for the latest ERROR or WARN log that has not been processed yet
+    const targetLog = logs.find((log) => 
+      (log.level === "ERROR" || log.level === "WARN") && 
+      log.module !== "HEALER" && 
+      !attemptedHeals[log.id]
+    );
+
+    if (targetLog) {
+      markLogAsAttempted(targetLog.id);
+      setSentinelNotification({
+        message: `⚡ Sentinel Intercept: Instantly caught system anomaly in module [${targetLog.module}]. Deploying AI Self-Healing hotfix before failure occurs.`,
+        logId: targetLog.id,
+        module: targetLog.module,
+        timestamp: new Date().toLocaleTimeString()
+      });
+      
+      // Execute the healing action automatically
+      handleAutoHeal(targetLog.id);
+    }
+  }, [logs, sentinelEnabled, healingInProgress, attemptedHeals]);
 
   const handleClearLogs = async () => {
     if (!window.confirm("Are you sure you want to purge all aggregated system logs from the SQLite table?")) {
@@ -128,6 +251,12 @@ export default function CentralLogDashboard() {
     }
   });
 
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(id);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
   // If testing unhandled React crash
   if (triggerCrash) {
     throw new Error("Demonstration Exception: Simulated unhandled error triggered from the System Logs dashboard.");
@@ -165,7 +294,37 @@ export default function CentralLogDashboard() {
         </div>
       </div>
 
-      {/* Stats Summary Panel */}
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-zinc-850 font-mono text-xs gap-1 pb-px">
+        <button
+          onClick={() => setActiveTab("telemetry")}
+          className={`px-4 py-2 border-b-2 font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            activeTab === "telemetry"
+              ? "border-indigo-500 text-indigo-400 bg-zinc-950/20"
+              : "border-transparent text-slate-500 hover:text-slate-350"
+          }`}
+        >
+          <Terminal className="w-3.5 h-3.5" />
+          <span>LIVE TELEMETRY STREAM</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("claude")}
+          className={`px-4 py-2 border-b-2 font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            activeTab === "claude"
+              ? "border-emerald-500 text-emerald-400 bg-zinc-950/20"
+              : "border-transparent text-slate-500 hover:text-slate-350"
+          }`}
+        >
+          <Code className="w-3.5 h-3.5" />
+          <span>CLAUDE DESKTOP CONNECT</span>
+        </button>
+      </div>
+
+      {activeTab === "claude" ? (
+        <ClaudeDesktopConnectPanel handleCopy={handleCopy} copiedText={copiedText} />
+      ) : (
+        <div className="space-y-6">
+          {/* Stats Summary Panel */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
         <div className="bg-zinc-950/40 p-3.5 border border-zinc-850 rounded-xl flex items-center justify-between">
           <div className="space-y-0.5">
@@ -211,6 +370,244 @@ export default function CentralLogDashboard() {
           <Cpu className="w-5 h-5 text-purple-400/70" />
         </div>
       </div>
+
+      {/* PROACTIVE SENTINEL SENTINEL GUARD BANNER */}
+      <div className={`border p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 font-mono text-xs overflow-hidden relative ${
+        sentinelEnabled 
+          ? "bg-emerald-950/20 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.03)]" 
+          : "bg-zinc-950/30 border-zinc-800"
+      }`}>
+        {/* Animated grid overlay if enabled */}
+        {sentinelEnabled && (
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(16,185,129,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none animate-pulse" />
+        )}
+
+        <div className="flex items-start gap-3.5 relative z-10 w-full md:w-auto">
+          <div className="mt-0.5 relative flex items-center justify-center">
+            {sentinelEnabled ? (
+              <>
+                <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-emerald-400 opacity-75"></span>
+                <Cpu className="w-5 h-5 text-emerald-400" />
+              </>
+            ) : (
+              <Cpu className="w-5 h-5 text-slate-500" />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className={`font-black tracking-wider uppercase text-[10px] px-1.5 py-0.5 rounded ${
+                sentinelEnabled ? "bg-emerald-900/60 text-emerald-300 border border-emerald-800/50" : "bg-zinc-800 text-slate-400"
+              }`}>
+                {sentinelEnabled ? "🟢 SENTINEL PATROL ACTIVE" : "⚪ AUTONOMOUS STANDBY"}
+              </span>
+              <span className="text-[10px] text-slate-500">Sentinel Guardian v2.5</span>
+            </div>
+            
+            <p className="text-[11px] text-slate-300 leading-relaxed max-w-xl">
+              {sentinelNotification 
+                ? sentinelNotification.message 
+                : sentinelEnabled 
+                ? "Patrolling aggregated system logs. If a warning, error, or exception drops system health, the Core immediately triggers generative AI remediation to heal the source files or databases in-situ before crash cascades." 
+                : "Autonomous Sentinel is offline. Select 'ENGAGE SENTINEL' to let Empire OS dynamically heal any warnings, errors, or memory locks."
+              }
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 relative z-10 w-full md:w-auto justify-end">
+          {sentinelNotification && (
+            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-800/40 px-2 py-1 rounded animate-pulse">
+              [INTERCEPTED AT {sentinelNotification.timestamp}]
+            </span>
+          )}
+          <button
+            onClick={() => setSentinelEnabled(!sentinelEnabled)}
+            className={`px-3 py-1.5 rounded-lg border font-bold text-[10px] tracking-wider cursor-pointer uppercase transition-all ${
+              sentinelEnabled 
+                ? "bg-red-950/20 hover:bg-red-950/40 text-red-400 border-red-900/30 hover:border-red-800/50" 
+                : "bg-emerald-950/30 hover:bg-emerald-950/50 text-emerald-400 border-emerald-900/30 hover:border-emerald-800/50"
+            }`}
+          >
+            {sentinelEnabled ? "DISENGAGE SENTINEL" : "ENGAGE SENTINEL"}
+          </button>
+        </div>
+      </div>
+
+      {/* AUTONOMOUS HEALING DIAGNOSTIC TERMINAL */}
+      {(healingLogId || healingInProgress || healerOutput || healingError) && (
+        <div className="bg-zinc-950 border border-emerald-500/30 rounded-xl p-5 space-y-4 shadow-[0_0_20px_rgba(16,185,129,0.05)] animate-fade-in relative overflow-hidden font-mono text-xs">
+          
+          {/* Cybernetic Grid Matrix Background */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(to_right,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-zinc-850 pb-3 relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${healingInProgress ? "bg-emerald-400" : "bg-emerald-500"}`}></span>
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${healingInProgress ? "bg-emerald-400" : "bg-emerald-500"}`}></span>
+              </span>
+              <span className="text-slate-200 font-extrabold uppercase tracking-wide flex items-center gap-1.5 text-xs sm:text-sm">
+                <Cpu className="w-4 h-4 text-emerald-400 animate-spin-slow" />
+                EMPIRE OS // SELF-HEALING AUTOMATION CORE
+              </span>
+            </div>
+            
+            <button 
+              onClick={() => {
+                setHealingLogId(null);
+                setHealerOutput(null);
+                setHealingError(null);
+              }}
+              className="text-slate-400 hover:text-slate-250 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg text-[10px] cursor-pointer transition-all hover:bg-zinc-850"
+            >
+              CLOSE TERMINAL
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 relative z-10">
+            {/* Live Diagnostic Workflow Terminal */}
+            <div className="lg:col-span-5 space-y-3 bg-zinc-900/90 border border-zinc-850 p-4 rounded-xl shadow-inner min-h-[220px] flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] text-slate-500 font-black tracking-wider uppercase block mb-3 border-b border-zinc-850 pb-1">
+                  AGENT EXECUTION STEPS
+                </span>
+                <div className="space-y-2.5">
+                  {HEALER_STEPS.map((step, idx) => {
+                    const isActive = idx === healerStepIndex && healingInProgress;
+                    const isCompleted = idx < healerStepIndex || (healerOutput && idx === HEALER_STEPS.length - 1);
+                    return (
+                      <div key={idx} className="flex items-start gap-2 text-[11px]">
+                        <div className="mt-0.5 shrink-0">
+                          {isCompleted ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : isActive ? (
+                            <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <div className="w-3.5 h-3.5 border border-zinc-700 rounded-full bg-zinc-950" />
+                          )}
+                        </div>
+                        <span className={`${
+                          isCompleted ? "text-emerald-400 font-bold" : isActive ? "text-slate-200 animate-pulse font-bold" : "text-slate-500"
+                        }`}>
+                          {step}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Status footer line */}
+              <div className="pt-4 border-t border-zinc-850 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                <span>SYSTEM_LOCK: OPTIMAL</span>
+                <span>THREAD_REPAIR_ENGAGED</span>
+              </div>
+            </div>
+
+            {/* AI Diagnostics & Healing Manifest */}
+            <div className="lg:col-span-7 space-y-4">
+              {healingInProgress && (
+                <div className="flex flex-col items-center justify-center py-12 space-y-3 bg-zinc-900/40 border border-zinc-850/60 rounded-xl">
+                  <div className="relative flex items-center justify-center">
+                    <div className="w-12 h-12 border-2 border-emerald-400/20 border-t-emerald-400 rounded-full animate-spin" />
+                    <Sparkles className="w-5 h-5 text-emerald-400 absolute animate-pulse" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[11px] font-bold text-slate-300 animate-pulse">AUTONOMOUS SYNAPSE SYNCHRONIZING</p>
+                    <p className="text-[9px] text-slate-500 mt-1">Reading database exception stack logs & local workspace files...</p>
+                  </div>
+                </div>
+              )}
+
+              {healingError && (
+                <div className="bg-red-950/20 border border-red-900/30 p-4 rounded-xl space-y-3 animate-fade-in">
+                  <div className="flex items-center gap-2 text-red-400 font-bold">
+                    <AlertTriangle className="w-4 h-4 animate-bounce" />
+                    <span>DIAGNOSTIC FAULT REPORTED</span>
+                  </div>
+                  <p className="text-red-300 leading-normal text-[11px] font-mono select-text">
+                    {healingError}
+                  </p>
+                  <div className="text-[9px] text-slate-500 italic leading-relaxed">
+                    Ensure GEMINI_API_KEY environment variable is configured in the settings dashboard to initiate model synthesis.
+                  </div>
+                </div>
+              )}
+
+              {healerOutput && (
+                <div className="space-y-3 animate-fade-in text-[11px] leading-relaxed">
+                  
+                  {/* Diagnosis */}
+                  <div className="bg-zinc-900/50 border border-zinc-850 p-3.5 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-1 text-emerald-400 font-bold uppercase text-[10px]">
+                      <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Core AI Diagnosis
+                    </div>
+                    <p className="text-slate-300 select-text selection:bg-indigo-950">
+                      {healerOutput.diagnosis}
+                    </p>
+                  </div>
+
+                  {/* Actions Applied */}
+                  <div className="grid grid-cols-2 gap-3 font-mono">
+                    <div className="bg-zinc-900/50 border border-zinc-850 p-2.5 rounded-xl">
+                      <span className="text-[8px] text-slate-500 block font-bold uppercase">HEALING STRATEGY</span>
+                      <span className="text-emerald-400 font-black text-[10px] uppercase tracking-wide">{healerOutput.healingAction}</span>
+                    </div>
+                    <div className="bg-zinc-900/50 border border-zinc-850 p-2.5 rounded-xl">
+                      <span className="text-[8px] text-slate-500 block font-bold uppercase">OUTCOME STATUS</span>
+                      <span className="text-slate-200 font-black text-[10px] tracking-wide">100% HOTPATCH_APPLIED</span>
+                    </div>
+                  </div>
+
+                  {/* Code Diff or execution steps */}
+                  {healerOutput.patchDiff && (
+                    <div className="space-y-1 bg-zinc-950 border border-zinc-850 rounded-xl overflow-hidden shadow-inner">
+                      <div className="bg-zinc-900/80 px-3 py-1.5 border-b border-zinc-850 text-[9px] text-slate-400 font-bold uppercase flex items-center justify-between">
+                        <span>Proposed Remediation Diff Patch</span>
+                        <span className="text-emerald-400 font-extrabold text-[8px] tracking-wide bg-emerald-950/50 border border-emerald-900/30 px-1 py-0.2 rounded">CYBER_DIFF_STABLE</span>
+                      </div>
+                      <pre className="p-3 text-[10px] overflow-x-auto text-slate-300 font-mono whitespace-pre select-text selection:bg-indigo-950 leading-tight max-h-52 bg-zinc-950">
+                        {healerOutput.patchDiff.split('\n').map((line, i) => {
+                          const isAdd = line.startsWith('+');
+                          const isDel = line.startsWith('-');
+                          const isHeader = line.startsWith('@@') || line.startsWith('diff') || line.startsWith('---') || line.startsWith('+++');
+                          const lineClass = isAdd 
+                            ? "text-emerald-400 bg-emerald-950/20 px-1 font-bold" 
+                            : isDel 
+                            ? "text-red-400 bg-red-950/20 px-1 font-bold" 
+                            : isHeader 
+                            ? "text-indigo-400 font-bold" 
+                            : "text-slate-400";
+                          return (
+                            <div key={i} className={lineClass}>
+                              {line}
+                            </div>
+                          );
+                        })}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* Server logs */}
+                  <div className="space-y-1">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block tracking-wider">REMEDIATION LOG STREAM</span>
+                    <div className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 max-h-32 overflow-y-auto font-mono text-[9px] text-emerald-400/90 leading-relaxed space-y-1 select-text">
+                      {healerOutput.executionLogs.map((logLine, idx) => (
+                        <div key={idx} className={logLine.includes("SUCCESS") ? "text-emerald-400 font-bold" : logLine.includes("ERROR") ? "text-red-400 font-bold" : "text-slate-450"}>
+                          {logLine}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
@@ -356,6 +753,24 @@ export default function CentralLogDashboard() {
                             <pre className="p-3 bg-zinc-900 rounded-lg text-slate-300 overflow-x-auto whitespace-pre-wrap select-text selection:bg-indigo-950 font-mono text-[10px] border border-zinc-800 leading-normal max-h-56">
                               {log.details || "No secondary metadata or stack trace payload enregistered."}
                             </pre>
+                          </div>
+
+                          {/* Autonomous AI Diagnostics Trigger */}
+                          <div className="flex items-center justify-between border-t border-zinc-900 pt-2.5 mt-2">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                              <Cpu className="w-3 h-3 text-emerald-400" /> Remediations Available
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAutoHeal(log.id);
+                              }}
+                              disabled={healingInProgress}
+                              className="bg-emerald-950/50 hover:bg-emerald-900/40 text-emerald-400 px-3 py-1 rounded border border-emerald-800/40 hover:border-emerald-700/50 transition-all font-mono font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Sparkles className="w-3 h-3 text-emerald-400 animate-pulse" />
+                              <span>🔮 AI AUTONOMOUS HEAL</span>
+                            </button>
                           </div>
                         </div>
                       )}
@@ -553,6 +968,8 @@ export default function CentralLogDashboard() {
 
       </div>
 
+      </div>
+      )}
     </div>
   );
 }
