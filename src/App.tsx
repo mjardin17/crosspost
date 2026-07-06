@@ -28,9 +28,12 @@ import SettingsCenter from "./components/SettingsCenter";
 import { LayoutGrid } from "lucide-react";
 import CommandCenter from "./components/CommandCenter";
 
+import { CentralErrorBoundary } from "./components/CentralErrorBoundary";
+import CentralLogDashboard from "./components/CentralLogDashboard";
+
 const INITIAL_SCRIPT_TEMPLATE = `In this deep architectural teardown, we review how to move past modern React client-side monoliths handling isolated metadata. We explain how storing platform API keys directly on client user devices creates immense key disclosure vulnerability. Instead, we propose an enterprise topology utilizing Go FastAPI gateways, Temporal workflows, PostgreSQL pgvector style retrieval, and serverless FFmpeg pipelines on Fargate to manage high throughput contextual generations. Let's dive in!`;
 
-export default function App() {
+export function App() {
   const [script, setScript] = useState<string>(INITIAL_SCRIPT_TEMPLATE);
   const [platforms, setPlatforms] = useState<PlatformConfig[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["twitter", "linkedin", "tiktok"]);
@@ -604,7 +607,7 @@ export default function App() {
                 onClick={() => setCurrentWorkspace("mission")}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
                   currentWorkspace === "mission"
-                    ? "bg-indigo-600 text-slate-100 shadow-md font-bold"
+                    ? "bg-indigo-650 text-slate-100 shadow-md font-bold"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/25"
                 }`}
               >
@@ -613,6 +616,21 @@ export default function App() {
                   <span>Mission Control</span>
                 </div>
                 <span className="text-[8px] bg-indigo-950 border border-indigo-900/40 text-indigo-300 px-1 rounded font-bold">CORE</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("diagnostics")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "diagnostics"
+                    ? "bg-rose-950/40 text-slate-100 border border-rose-900/40 shadow-md font-bold"
+                    : "text-slate-400 hover:text-rose-400 hover:bg-rose-950/10"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-rose-500 animate-pulse" />
+                  <span>Central Telemetry</span>
+                </div>
+                <span className="text-[8px] bg-red-950 border border-red-900/40 text-red-400 px-1 rounded font-bold">FAILURES</span>
               </button>
 
               <button
@@ -2222,6 +2240,10 @@ export default function App() {
           <MissionControl onNavigate={(ws) => setCurrentWorkspace(ws)} />
         )}
 
+        {currentWorkspace === "diagnostics" && (
+          <CentralLogDashboard />
+        )}
+
         {currentWorkspace === "commandcenter" && (
           <CommandCenter />
         )}
@@ -2426,5 +2448,13 @@ export default function App() {
       </div>
 
     </div>
+  );
+}
+
+export default function AppWithErrorBoundary() {
+  return (
+    <CentralErrorBoundary>
+      <App />
+    </CentralErrorBoundary>
   );
 }

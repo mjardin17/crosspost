@@ -70,3 +70,13 @@ export interface MultiAgentResponse {
   generations: PlatformGeneration[];
   isSimulated?: boolean;
 }
+
+export interface SystemLogItem {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR" | "DEBUG";
+  module: string;
+  message: string;
+  details?: string;
+}
+
