@@ -116,7 +116,7 @@ export default function OllamaCommandCenter() {
         setHostUrl(data.hostUrl);
       }
     } catch (err) {
-      console.error("Failed to load local models:", err);
+      console.warn("Failed to load local models (this is normal during startup/restart):", err);
     } finally {
       setLoadingModels(false);
     }
@@ -131,7 +131,7 @@ export default function OllamaCommandCenter() {
         setQueue(data.queue.reverse()); // Newest first
       }
     } catch (err) {
-      console.error("Failed to fetch queue:", err);
+      console.warn("Failed to fetch queue (this is normal during startup/restart):", err);
     }
   };
 
@@ -144,7 +144,7 @@ export default function OllamaCommandCenter() {
         setSystemMetrics(data.metrics);
       }
     } catch (err) {
-      console.error("Failed to fetch system metrics:", err);
+      console.warn("Failed to fetch system metrics (this is normal during startup/restart):", err);
     }
   };
 

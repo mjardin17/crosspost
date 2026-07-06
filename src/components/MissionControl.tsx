@@ -306,7 +306,7 @@ export default function MissionControl({ onNavigate }: MissionControlProps) {
         }
       }
     } catch (err) {
-      console.error("Failed to fetch live system status:", err);
+      console.warn("Failed to fetch live system status (this is normal during startup/restart):", err);
     }
   };
 

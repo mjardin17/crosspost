@@ -355,7 +355,7 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.error("Failed to retrieve system codebase files:", err);
+      console.warn("Failed to retrieve system codebase files (this is normal during startup/restart):", err);
     } finally {
       setFetchingCode(false);
     }
@@ -422,7 +422,7 @@ export default function App() {
         }
       })
       .catch((err) => {
-        console.error("Platform spec fetching failed. Utilizing procedured defaults.", err);
+        console.warn("Platform spec fetching failed. Utilizing procedured defaults (this is normal during startup/restart):", err);
         // Fallback platform list mirroring server
         const fallbackPlatforms: PlatformConfig[] = [
           {
