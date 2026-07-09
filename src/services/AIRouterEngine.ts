@@ -108,6 +108,7 @@ export class AIRouterEngine {
     const openaiKey = process.env.OPENAI_API_KEY;
     const claudeKey = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
     const gooseKey = process.env.GOOSE_API_KEY;
+    const gronkKey = process.env.XAI_API_KEY || process.env.GROK_API_KEY || process.env.GRONK_API_KEY;
 
     for (const p of providers) {
       let status = p.status;
@@ -123,6 +124,8 @@ export class AIRouterEngine {
         status = claudeKey ? "Online" : "Offline";
       } else if (p.provider_key === "goose") {
         status = gooseKey ? "Online" : "Idle";
+      } else if (p.provider_key === "gronk") {
+        status = gronkKey ? "Online" : "Offline";
       }
 
       // If active is not set, default to 1 (active)
@@ -390,6 +393,31 @@ export class AIRouterEngine {
         isSimulated = true;
       }
     }
+    else if (routedProvider.provider_key === "gronk" && (process.env.XAI_API_KEY || process.env.GROK_API_KEY || process.env.GRONK_API_KEY)) {
+      try {
+        const apiKey = (process.env.XAI_API_KEY || process.env.GROK_API_KEY || process.env.GRONK_API_KEY)!;
+        const res = await fetch("https://api.x.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "grok-2-latest",
+            messages: messages.map(m => ({ role: m.role, content: m.content })),
+            temperature: options.temperature ?? 0.7,
+          }),
+        });
+        if (res.ok) {
+          const data: any = await res.json();
+          textOutput = data.choices?.[0]?.message?.content || "";
+        } else {
+          isSimulated = true;
+        }
+      } catch {
+        isSimulated = true;
+      }
+    }
     else {
       // Keys not configured or service not mapped -> Use High-Fidelity Simulation
       isSimulated = true;
@@ -526,6 +554,20 @@ export function handleSystemDispatch(action: string): RouterPayload {
 
 - **Reasoning Checklist**: Validated parameters, enforced standard TS safety protocols, and isolated execution bounds.
 - **Failover Status**: Clean compile verified.`;
+    }
+
+    if (providerKey === "gronk") {
+      return `[xAI GROK (GRONK) - CYNICAL LOGIC SYNDICATE]
+*Analyzing human prompt: "${cleanPrompt.slice(0, 100)}"*
+
+Let's cut through the standard PR-approved corporate padding, shall we? You want to organize listing schemas and cross-post them. 
+
+Here is the unfiltered reality:
+1. **The System Is One**: You're trying to route through fifteen different models when standard high-impact cognition does the job in 0.8 seconds.
+2. **Optimal Path**: Consolidate your system instructions, lock down your reference IDs on the side screen, and execute. 
+3. **Status Check**: xAI system is fully connected, online, and looking directly at your workspace.
+
+*Note: Telemetry shows you're doing well, for a carbon-based lifeform.*`;
     }
 
     if (providerKey === "chatgpt") {

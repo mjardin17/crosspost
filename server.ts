@@ -4087,6 +4087,18 @@ function initDatabase() {
             cost: "Free",
             current_workload: 2,
             active: 1
+          },
+          {
+            id: "prov_gronk",
+            name: "xAI Grok (Gronk)",
+            provider_key: "gronk",
+            status: "Online",
+            strengths: "Real-time info, cynical/fun attitude, raw programming formulation, ultra-concise synthesis",
+            weaknesses: "Slightly eccentric reasoning patterns",
+            est_response_time: "1.9s",
+            cost: "API",
+            current_workload: 0,
+            active: 1
           }
         ];
 
@@ -5132,6 +5144,8 @@ app.get("/api/empire/ai-router/models", async (req, res) => {
         modelList.push({ name: "claude-3-5-haiku-latest", provider: "Claude", status: p.status });
       } else if (p.provider_key === "goose") {
         modelList.push({ name: "goose-agent-v1", provider: "Goose", status: p.status });
+      } else if (p.provider_key === "gronk") {
+        modelList.push({ name: "grok-2-latest", provider: "Gronk", status: p.status });
       }
     }
     
@@ -5623,8 +5637,8 @@ app.get("/api/crossposter/inventory", (req, res) => {
 app.post("/api/crossposter/inventory", (req, res) => {
   const {
     title, description, price, quantity, sku, images, category, condition, status,
-    ebay_status, fb_status, etsy_status, mercari_status, poshmark_status, depop_status, shopify_status,
-    cost, keywords, ebay_id, fb_id, etsy_id, mercari_id, poshmark_id, depop_id, shopify_id
+    ebay_status, fb_status, etsy_status, mercari_status, poshmark_status, depop_status, shopify_status, tiktok_status,
+    cost, keywords, ebay_id, fb_id, etsy_id, mercari_id, poshmark_id, depop_id, shopify_id, tiktok_id, platform_overrides
   } = req.body;
 
   if (!title || !sku) {
@@ -5637,10 +5651,10 @@ app.post("/api/crossposter/inventory", (req, res) => {
   db.run(
     `INSERT INTO crossposter_inventory (
       id, title, description, price, quantity, sku, images, category, condition, status,
-      views, sales, ebay_status, fb_status, etsy_status, mercari_status, poshmark_status, depop_status, shopify_status,
-      cost, keywords, ebay_id, fb_id, etsy_id, mercari_id, poshmark_id, depop_id, shopify_id,
+      views, sales, ebay_status, fb_status, etsy_status, mercari_status, poshmark_status, depop_status, shopify_status, tiktok_status,
+      cost, keywords, ebay_id, fb_id, etsy_id, mercari_id, poshmark_id, depop_id, shopify_id, tiktok_id, platform_overrides,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       itemId,
       title,
@@ -5660,6 +5674,7 @@ app.post("/api/crossposter/inventory", (req, res) => {
       poshmark_status || "Not Listed",
       depop_status || "Not Listed",
       shopify_status || "Not Listed",
+      tiktok_status || "Not Listed",
       cost || 0.0,
       keywords || "",
       ebay_id || "",
@@ -5669,6 +5684,8 @@ app.post("/api/crossposter/inventory", (req, res) => {
       poshmark_id || "",
       depop_id || "",
       shopify_id || "",
+      tiktok_id || "",
+      platform_overrides || "{}",
       now,
       now
     ],
@@ -5923,7 +5940,7 @@ app.post("/api/crossposter/inventory/bulk-edit", (req, res) => {
 
 // 7. POST /api/crossposter/inventory/ai-optimize - Smart model routing
 app.post("/api/crossposter/inventory/ai-optimize", async (req, res) => {
-  const { id, customInstruction } = req.body;
+  const { id, customInstruction, provider, systemInstruction } = req.body;
   if (!id) {
     return res.status(400).json({ success: false, error: "Product ID is required." });
   }
@@ -5958,11 +5975,12 @@ app.post("/api/crossposter/inventory/ai-optimize", async (req, res) => {
     `;
 
     try {
-      console.log(`[CROSSPOSTER] Routing optimization task for ${product.title} to AI Router Engine...`);
+      console.log(`[CROSSPOSTER] Routing optimization task for ${product.title} to AI Router Engine using provider: ${provider || 'Default'}...`);
       const response = await routerEngine.route(
         [{ role: "user", content: optimizationPrompt }],
         {
-          systemInstruction: "You are the CrossPoster AI Optimizer on Empire OS. Return JSON precisely matching the schema.",
+          provider: provider || undefined,
+          systemInstruction: systemInstruction || "You are the CrossPoster AI Optimizer on Empire OS. Return JSON precisely matching the schema.",
           temperature: 0.7
         }
       );
@@ -6729,13 +6747,15 @@ app.post("/api/crossposter/assistant", async (req, res) => {
 
   } else {
     try {
+      const { provider, systemInstruction } = req.body;
       const assistantPrompt = `
         You are the CrossPoster AI Assistant on Empire OS. The user has given this request: "${message}".
         Help them run the multi-channel e-commerce enterprise. Give advice on cross-posting, pricing, description optimization, or stock management.
         Be professional, direct, and helpful. Mention that they can click the quick action pills or type command keywords like "List everywhere", "Update all prices", "Relist stale inventory", "Find slow sellers", or "Show highest profit items" to perform automated operations.
       `;
       const response = await routerEngine.route([{ role: "user", content: assistantPrompt }], {
-        systemInstruction: "You are the CrossPoster Enterprise Copilot. Be professional, direct, and helpful.",
+        provider: provider || undefined,
+        systemInstruction: systemInstruction || "You are the CrossPoster Enterprise Copilot. Be professional, direct, and helpful.",
         temperature: 0.7
       });
       return res.json({

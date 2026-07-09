@@ -335,9 +335,18 @@ export default function BossListers() {
   const [formPoshmarkId, setFormPoshmarkId] = useState<string>("");
   const [formDepopId, setFormDepopId] = useState<string>("");
   const [formShopifyId, setFormShopifyId] = useState<string>("");
+  const [formTiktokId, setFormTiktokId] = useState<string>("");
 
   // AI & Cross-posting options
+  const [selectedAIProvider, setSelectedAIProvider] = useState<string>(() => {
+    return localStorage.getItem("boss_selected_ai_provider") || "gemini";
+  });
+  const [globalSystemInstruction, setGlobalSystemInstruction] = useState<string>(() => {
+    return localStorage.getItem("boss_global_system_instruction") || 
+      "You are the Sovereign CrossPoster Enterprise Brain. Maximize sales potential, organic traffic reach, SEO visibility, and clean structural list appeal.";
+  });
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+  const [isAligningSpecialists, setIsAligningSpecialists] = useState<boolean>(false);
   const [customOptimizeInstruction, setCustomOptimizeInstruction] = useState<string>("");
   const [crosspostPlatforms, setCrosspostPlatforms] = useState<string[]>(["ebay", "shopify"]);
 
@@ -443,6 +452,7 @@ export default function BossListers() {
     setFormPoshmarkId(item.poshmark_id || "");
     setFormDepopId(item.depop_id || "");
     setFormShopifyId(item.shopify_id || "");
+    setFormTiktokId(item.tiktok_id || "");
 
     try {
       setFormImages(JSON.parse(item.images));
@@ -490,6 +500,7 @@ export default function BossListers() {
           poshmark_id: formPoshmarkId,
           depop_id: formDepopId,
           shopify_id: formShopifyId,
+          tiktok_id: formTiktokId,
           platform_overrides: JSON.stringify({
             ebay: { description: formDescEbay },
             shopify: { description: formDescShopify },
@@ -545,6 +556,7 @@ export default function BossListers() {
           poshmark_id: formPoshmarkId,
           depop_id: formDepopId,
           shopify_id: formShopifyId,
+          tiktok_id: formTiktokId,
           platform_overrides: JSON.stringify({
             ebay: { description: formDescEbay },
             shopify: { description: formDescShopify },
@@ -602,7 +614,9 @@ export default function BossListers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: selectedItem.id,
-          customInstruction: customOptimizeInstruction
+          customInstruction: customOptimizeInstruction,
+          provider: selectedAIProvider,
+          systemInstruction: globalSystemInstruction
         })
       });
 
@@ -755,6 +769,57 @@ export default function BossListers() {
       setIsAuditing(false);
       setActiveAuditPlatform("");
       setAuditProgress(0);
+    }
+  };
+
+  // Run real-time automated Channel Specialist Layout Alignments
+  const handleChannelSpecialistAlignment = async () => {
+    if (!selectedItem) {
+      alert("Please select a product from the inventory first.");
+      return;
+    }
+    setIsAligningSpecialists(true);
+    setTerminalLogs(prev => [
+      `[SPECIALISTS] 🤖 Activating Channel Specialists for immediate layout alignment...`,
+      `[SPECIALISTS] Targets: ${crosspostPlatforms.map(p => p.toUpperCase()).join(", ")}`,
+      ...prev
+    ]);
+
+    try {
+      const response = await fetch("/api/crossposter/inventory/agent-auto-align", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedItem.id,
+          platforms: crosspostPlatforms
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setTerminalLogs(prev => [
+          `[SPECIALISTS] ✅ Specialist alignment completed successfully!`,
+          ...data.logs.map((log: string) => `  * ${log}`),
+          ...prev
+        ]);
+
+        if (data.adjustments) {
+          const adj = data.adjustments;
+          if (adj.ebay?.description) setFormDescEbay(adj.ebay.description);
+          if (adj.shopify?.description) setFormDescShopify(adj.shopify.description);
+          if (adj.etsy?.description) setFormDescEtsy(adj.etsy.description);
+          if (adj.fb?.description) setFormDescSocial(adj.fb.description);
+          if (adj.tiktok?.description) setFormDescTiktok(adj.tiktok.description);
+          if (adj.depop?.description) setFormDescDepop(adj.depop.description);
+        }
+      } else {
+        alert(data.error || "Alignment failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      setTerminalLogs(prev => [`[SPECIALISTS] ⚠️ Connection error. Proceeding with existing overrides...`, ...prev]);
+    } finally {
+      setIsAligningSpecialists(false);
     }
   };
 
@@ -1227,6 +1292,7 @@ export default function BossListers() {
     setFormPoshmarkId("");
     setFormDepopId("");
     setFormShopifyId("");
+    setFormTiktokId("");
     setFormImages(["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400"]);
   };
 
@@ -1264,7 +1330,11 @@ export default function BossListers() {
       const response = await fetch("/api/crossposter/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToSend })
+        body: JSON.stringify({
+          message: textToSend,
+          provider: selectedAIProvider,
+          systemInstruction: globalSystemInstruction
+        })
       });
       const data = await response.json();
       if (data.success) {
@@ -2051,6 +2121,93 @@ export default function BossListers() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-4"
               >
+                {/* Unified AI Settings Card */}
+                <div className="bg-gradient-to-br from-indigo-950/30 to-zinc-950 border border-indigo-900/40 p-5 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+                      <h3 className="text-sm font-mono font-black text-slate-100 uppercase tracking-tight">
+                        Sovereign AI Router Core (Unified Engine)
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-mono bg-indigo-900/40 text-indigo-300 border border-indigo-700/30 px-2 py-0.5 rounded">
+                      ONLINE
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-normal font-sans">
+                    Configure your active global LLM provider and define the single, master <strong>Sovereign System Instruction</strong>. Both listing optimizations (such as eBay/Depop channel-tailoring) and Copilot conversation behaviors will automatically synchronize through this singular intelligence construct.
+                  </p>
+
+                  <div className="space-y-3 pt-2">
+                    <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wide">
+                      Select Active Intelligence Provider:
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {[
+                        { id: "gemini", label: "Google Gemini", desc: "Native API" },
+                        { id: "claude", label: "Anthropic Claude", desc: "API key" },
+                        { id: "gronk", label: "xAI Grok (Gronk)", desc: "API key" },
+                        { id: "chatgpt", label: "OpenAI ChatGPT", desc: "API key" },
+                        { id: "ollama_llama3", label: "Local Ollama", desc: "Sandbox" },
+                      ].map(provider => {
+                        const isSelected = selectedAIProvider === provider.id;
+                        return (
+                          <button
+                            key={provider.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAIProvider(provider.id);
+                              localStorage.setItem("boss_selected_ai_provider", provider.id);
+                              setTerminalLogs(prev => [`[AI ENGINE] Switched global provider to ${provider.label}.`, ...prev]);
+                            }}
+                            className={`flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all text-center cursor-pointer ${
+                              isSelected
+                                ? "bg-indigo-600/20 border-indigo-500 text-indigo-200 shadow-lg shadow-indigo-950/50"
+                                : "bg-zinc-950 border-zinc-850 text-slate-400 hover:bg-zinc-900 hover:text-slate-200"
+                            }`}
+                          >
+                            <span className="text-[11px] font-mono font-black">{provider.label}</span>
+                            <span className="text-[8px] font-mono opacity-60 mt-0.5">{provider.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wide">
+                        Master Sovereign System Prompt:
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const defaultPrompt = "You are the Sovereign CrossPoster Enterprise Brain. Maximize sales potential, organic traffic reach, SEO visibility, and clean structural list appeal.";
+                          setGlobalSystemInstruction(defaultPrompt);
+                          localStorage.setItem("boss_global_system_instruction", defaultPrompt);
+                          setTerminalLogs(prev => [`[AI ENGINE] Reset master Sovereign prompt to default.`, ...prev]);
+                        }}
+                        className="text-[9px] font-mono text-indigo-400 hover:underline cursor-pointer"
+                      >
+                        Reset to default
+                      </button>
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={globalSystemInstruction}
+                      onChange={(e) => {
+                        setGlobalSystemInstruction(e.target.value);
+                        localStorage.setItem("boss_global_system_instruction", e.target.value);
+                      }}
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 transition-all leading-relaxed"
+                      placeholder="Enter master rules..."
+                    />
+                    <div className="text-[9px] text-zinc-500 font-sans flex items-center gap-1.5 leading-normal">
+                      <span>● All optimizations and Copilot responses will be processed directly under this system prompt.</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-zinc-950/40 border border-zinc-850 p-5 rounded-lg space-y-4">
                   <div className="flex items-center gap-2">
                     <Layers3 className="w-5 h-5 text-indigo-400" />
@@ -2208,7 +2365,7 @@ export default function BossListers() {
                         <div className="self-start items-start flex flex-col max-w-[85%]">
                           <div className="rounded-lg px-3 py-2 text-xs bg-zinc-900 border border-zinc-850 text-indigo-400 font-mono flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"></span>
-                            Empire AI Router routing to LLM model...
+                            Empire AI Router routing to active {selectedAIProvider.toUpperCase()} model...
                           </div>
                         </div>
                       )}
@@ -2630,11 +2787,11 @@ export default function BossListers() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[9px] text-zinc-500">Facebook ID</span>
+                      <span className="text-[9px] text-zinc-500">Shopify ID</span>
                       <input
                         type="text"
-                        value={formFbId}
-                        onChange={(e) => setFormFbId(e.target.value)}
+                        value={formShopifyId}
+                        onChange={(e) => setFormShopifyId(e.target.value)}
                         className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
                         placeholder="N/A"
                       />
@@ -2650,11 +2807,51 @@ export default function BossListers() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[9px] text-zinc-500">Shopify ID</span>
+                      <span className="text-[9px] text-zinc-500">Facebook ID</span>
                       <input
                         type="text"
-                        value={formShopifyId}
-                        onChange={(e) => setFormShopifyId(e.target.value)}
+                        value={formFbId}
+                        onChange={(e) => setFormFbId(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
+                        placeholder="N/A"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-500">Mercari ID</span>
+                      <input
+                        type="text"
+                        value={formMercariId}
+                        onChange={(e) => setFormMercariId(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
+                        placeholder="N/A"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-500">Poshmark ID</span>
+                      <input
+                        type="text"
+                        value={formPoshmarkId}
+                        onChange={(e) => setFormPoshmarkId(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
+                        placeholder="N/A"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-500">Depop ID</span>
+                      <input
+                        type="text"
+                        value={formDepopId}
+                        onChange={(e) => setFormDepopId(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
+                        placeholder="N/A"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-zinc-500">TikTok Shop ID</span>
+                      <input
+                        type="text"
+                        value={formTiktokId}
+                        onChange={(e) => setFormTiktokId(e.target.value)}
                         className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
                         placeholder="N/A"
                       />
@@ -2793,10 +2990,24 @@ export default function BossListers() {
                   <div className="bg-indigo-950/20 border border-indigo-900/35 p-3 rounded-lg space-y-2.5">
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-mono font-black text-indigo-400 uppercase tracking-wide flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                         AI Router Optimizer
                       </span>
-                      <span className="text-[9px] font-mono text-indigo-300 bg-indigo-950/40 border border-indigo-900/30 px-1.5 rounded">Ollama Default</span>
+                      <select
+                        value={selectedAIProvider}
+                        onChange={(e) => {
+                          setSelectedAIProvider(e.target.value);
+                          localStorage.setItem("boss_selected_ai_provider", e.target.value);
+                          setTerminalLogs(prev => [`[AI ENGINE] Switched active provider to ${e.target.value}.`, ...prev]);
+                        }}
+                        className="text-[10px] font-mono text-indigo-300 bg-indigo-950/60 border border-indigo-900/40 px-1.5 py-0.5 rounded focus:outline-none cursor-pointer border-none"
+                      >
+                        <option value="gemini" className="bg-zinc-950 text-slate-200">Gemini 3.5</option>
+                        <option value="claude" className="bg-zinc-950 text-slate-200">Claude 3.5</option>
+                        <option value="gronk" className="bg-zinc-950 text-slate-200">Grok (Gronk)</option>
+                        <option value="chatgpt" className="bg-zinc-950 text-slate-200">ChatGPT 4o</option>
+                        <option value="ollama_llama3" className="bg-zinc-950 text-slate-200">Ollama Local</option>
+                      </select>
                     </div>
                     <input
                       type="text"
@@ -2811,6 +3022,14 @@ export default function BossListers() {
                       className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 w-full py-2 rounded text-xs font-mono font-bold text-slate-100 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                     >
                       {isOptimizing ? "OPTIMIZING WITH LLM..." : "AI OPTIMIZE LISTING"}
+                    </button>
+                    
+                    <button
+                      onClick={handleChannelSpecialistAlignment}
+                      disabled={isAligningSpecialists}
+                      className="bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-800/30 text-emerald-400 disabled:opacity-50 w-full py-2 rounded text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      {isAligningSpecialists ? "ALIGNING CHANNELS..." : "⚡ SPECIALISTS LAYOUT ALIGN"}
                     </button>
                   </div>
 
