@@ -2696,7 +2696,7 @@ export default function BossListers() {
                       step="0.01"
                       value={formCost}
                       onChange={(e) => setFormCost(Number(e.target.value))}
-                      className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-slate-200 focus:outline-none"
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -2706,10 +2706,77 @@ export default function BossListers() {
                       step="0.01"
                       value={formPrice}
                       onChange={(e) => setFormPrice(Number(e.target.value))}
-                      className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-slate-200 focus:outline-none"
+                      className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
                     />
                   </div>
                 </div>
+
+                {/* Dynamic Profit & Margin Analyzer */}
+                {(() => {
+                  const cost = formCost || 0;
+                  const price = formPrice || 0;
+                  const profit = price - cost;
+                  const marginPct = price > 0 ? (profit / price) * 100 : 0;
+                  const roiPct = cost > 0 ? (profit / cost) * 100 : 0;
+                  
+                  // Color coding based on margin performance
+                  let marginColor = "text-rose-400 bg-rose-950/20 border-rose-900/30";
+                  let barColor = "bg-rose-500";
+                  if (marginPct >= 50) {
+                    marginColor = "text-emerald-400 bg-emerald-950/20 border-emerald-900/30";
+                    barColor = "bg-emerald-500";
+                  } else if (marginPct >= 20) {
+                    marginColor = "text-amber-400 bg-amber-950/20 border-amber-900/30";
+                    barColor = "bg-amber-500";
+                  }
+                  
+                  return (
+                    <div className="border border-zinc-850/60 rounded-lg p-2.5 bg-zinc-950/30 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider">Enterprise Margin Analyzer</span>
+                        <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase ${marginColor}`}>
+                          {marginPct >= 50 ? "Healthy Profit" : marginPct >= 20 ? "Moderate Margin" : "Low Margin"}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-1.5 text-center">
+                        <div className="bg-zinc-900/40 p-1.5 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block">EST. PROFIT</span>
+                          <span className={`text-xs font-mono font-bold ${profit >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                            ${profit.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="bg-zinc-900/40 p-1.5 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block">NET MARGIN</span>
+                          <span className={`text-xs font-mono font-bold ${profit >= 0 ? "text-slate-200" : "text-rose-400"}`}>
+                            {marginPct.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="bg-zinc-900/40 p-1.5 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block">ROI INDEX</span>
+                          <span className={`text-xs font-mono font-bold ${profit >= 0 ? "text-indigo-400" : "text-rose-400"}`}>
+                            {roiPct.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Visual gauge bar */}
+                      <div className="space-y-1">
+                        <div className="w-full bg-zinc-900 h-1 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full ${barColor} transition-all duration-300`} 
+                            style={{ width: `${Math.min(100, Math.max(0, marginPct))}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[8px] font-mono text-zinc-500">
+                          <span>0% margin</span>
+                          <span>50% (Target)</span>
+                          <span>100%</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-2 gap-3.5">
                   <div className="space-y-1">
@@ -2901,10 +2968,23 @@ export default function BossListers() {
                   )}
                   {activeDescTab === "ebay" && (
                     <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono text-slate-500">eBay Override</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDescEbay(formDesc);
+                            setTerminalLogs(prev => [`[SYSTEM] Cloned Master Description into eBay SEO override.`, ...prev]);
+                          }}
+                          className="text-[9px] font-mono font-bold text-amber-400 hover:text-amber-300 transition-all cursor-pointer flex items-center gap-1 bg-amber-950/20 px-1.5 py-0.5 rounded border border-amber-900/30 active:scale-95"
+                        >
+                          Clone Master
+                        </button>
+                      </div>
                       <textarea
                         value={formDescEbay}
                         onChange={(e) => setFormDescEbay(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-amber-400 focus:outline-none h-28"
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-amber-400 focus:outline-none h-28 focus:border-amber-500"
                         placeholder="eBay description (HTML/Plain text)..."
                       />
                       <p className="text-[9px] font-mono text-slate-500">Optimized with strict eBay buyer protection terms and dynamic delivery specs.</p>
@@ -2912,10 +2992,23 @@ export default function BossListers() {
                   )}
                   {activeDescTab === "shopify" && (
                     <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono text-slate-500">Shopify Override</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDescShopify(formDesc);
+                            setTerminalLogs(prev => [`[SYSTEM] Cloned Master Description into Shopify Elegant override.`, ...prev]);
+                          }}
+                          className="text-[9px] font-mono font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 bg-emerald-950/20 px-1.5 py-0.5 rounded border border-emerald-900/30 active:scale-95"
+                        >
+                          Clone Master
+                        </button>
+                      </div>
                       <textarea
                         value={formDescShopify}
                         onChange={(e) => setFormDescShopify(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none h-28"
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none h-28 focus:border-emerald-500"
                         placeholder="Shopify description..."
                       />
                       <p className="text-[9px] font-mono text-slate-500">Rich HTML blocks, detailed feature charts, and responsive checkout story structure.</p>
@@ -2923,10 +3016,23 @@ export default function BossListers() {
                   )}
                   {activeDescTab === "etsy" && (
                     <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono text-slate-500">Etsy Override</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDescEtsy(formDesc);
+                            setTerminalLogs(prev => [`[SYSTEM] Cloned Master Description into Etsy Story override.`, ...prev]);
+                          }}
+                          className="text-[9px] font-mono font-bold text-orange-400 hover:text-orange-300 transition-all cursor-pointer flex items-center gap-1 bg-orange-950/20 px-1.5 py-0.5 rounded border border-orange-900/30 active:scale-95"
+                        >
+                          Clone Master
+                        </button>
+                      </div>
                       <textarea
                         value={formDescEtsy}
                         onChange={(e) => setFormDescEtsy(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-orange-400 focus:outline-none h-28"
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-orange-400 focus:outline-none h-28 focus:border-orange-500"
                         placeholder="Etsy description..."
                       />
                       <p className="text-[9px] font-mono text-slate-500">Focuses on materials, artisan craftsmanship, vintage history, and custom attributes.</p>
@@ -2934,10 +3040,23 @@ export default function BossListers() {
                   )}
                   {activeDescTab === "social" && (
                     <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono text-slate-500">Social Override</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDescSocial(formDesc);
+                            setTerminalLogs(prev => [`[SYSTEM] Cloned Master Description into Social Ad override.`, ...prev]);
+                          }}
+                          className="text-[9px] font-mono font-bold text-pink-400 hover:text-pink-300 transition-all cursor-pointer flex items-center gap-1 bg-pink-950/20 px-1.5 py-0.5 rounded border border-pink-900/30 active:scale-95"
+                        >
+                          Clone Master
+                        </button>
+                      </div>
                       <textarea
                         value={formDescSocial}
                         onChange={(e) => setFormDescSocial(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-pink-400 focus:outline-none h-28"
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-pink-400 focus:outline-none h-28 focus:border-pink-500"
                         placeholder="Social ad description..."
                       />
                       <p className="text-[9px] font-mono text-slate-500">Formatted with hashtags, emojis, and high-impact call-to-actions to spark conversion.</p>
@@ -2945,10 +3064,23 @@ export default function BossListers() {
                   )}
                   {activeDescTab === "tiktok" && (
                     <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono text-slate-500">TikTok Shop Override</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDescTiktok(formDesc);
+                            setTerminalLogs(prev => [`[SYSTEM] Cloned Master Description into TikTok Shop override.`, ...prev]);
+                          }}
+                          className="text-[9px] font-mono font-bold text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer flex items-center gap-1 bg-cyan-950/20 px-1.5 py-0.5 rounded border border-cyan-900/30 active:scale-95"
+                        >
+                          Clone Master
+                        </button>
+                      </div>
                       <textarea
                         value={formDescTiktok}
                         onChange={(e) => setFormDescTiktok(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none h-28"
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none h-28 focus:border-cyan-500"
                         placeholder="TikTok Shop video description..."
                       />
                       <p className="text-[9px] font-mono text-slate-500">Auto aligned with viral hook title prefix, TikTok Shop seller guidelines, and affiliate incentives.</p>
@@ -2956,10 +3088,23 @@ export default function BossListers() {
                   )}
                   {activeDescTab === "depop" && (
                     <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono text-slate-500">Depop Override</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormDescDepop(formDesc);
+                            setTerminalLogs(prev => [`[SYSTEM] Cloned Master Description into Depop Streetwear override.`, ...prev]);
+                          }}
+                          className="text-[9px] font-mono font-bold text-yellow-400 hover:text-yellow-300 transition-all cursor-pointer flex items-center gap-1 bg-yellow-950/20 px-1.5 py-0.5 rounded border border-yellow-900/30 active:scale-95"
+                        >
+                          Clone Master
+                        </button>
+                      </div>
                       <textarea
                         value={formDescDepop}
                         onChange={(e) => setFormDescDepop(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-yellow-400 focus:outline-none h-28"
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-yellow-400 focus:outline-none h-28 focus:border-yellow-500"
                         placeholder="Depop style description..."
                       />
                       <p className="text-[9px] font-mono text-slate-500">Formatted in lower-case, aesthetic streetwear tags, and hashtag groups for young vintage buyers.</p>
@@ -3204,11 +3349,136 @@ export default function BossListers() {
               )}
             </div>
           ) : (
-            <div className="h-96 flex flex-col items-center justify-center text-center text-slate-500 space-y-3">
-              <ShoppingBag className="w-12 h-12 text-zinc-700" />
-              <div>
-                <p className="text-xs font-mono">No Active Item Selected</p>
-                <p className="text-[10px] text-slate-600 font-sans mt-1 max-w-xs">Select a product from the database grid, or register a new one to optimize listings.</p>
+            <div className="space-y-4 py-1">
+              <div className="bg-gradient-to-b from-zinc-950 to-zinc-900 border border-zinc-850 rounded-xl p-5 space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-[0.03] select-none pointer-events-none">
+                  <ShoppingBag className="w-24 h-24 text-white" />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    <span className="text-[10px] font-mono font-black text-indigo-400 uppercase tracking-widest">Empire OS Hub</span>
+                  </div>
+                  <h3 className="text-xs font-mono font-black text-slate-100 uppercase tracking-tight">
+                    Sovereign Control Panel
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
+                    Select any SKU item from your inventory to configure platform overrides, deploy channel listings, and consult AI Specialists.
+                  </p>
+                </div>
+
+                {/* Primary Quick Creation Action */}
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setIsAddingProduct(true);
+                  }}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono font-bold text-xs py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-indigo-600/10 cursor-pointer active:scale-[0.98]"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>REGISTER NEW PRODUCT SKU</span>
+                </button>
+              </div>
+
+              {/* Dynamic Live Statistics (Enterprise Core Metrics) */}
+              <div className="bg-zinc-950 border border-zinc-850 rounded-xl p-4 space-y-3">
+                <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider block border-b border-zinc-900 pb-1.5">
+                  Portfolio Real-Time Summary
+                </span>
+                
+                {(() => {
+                  const totalSkus = inventory.length;
+                  const totalValue = inventory.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 0)), 0);
+                  const totalQty = inventory.reduce((acc, item) => acc + (item.quantity || 0), 0);
+                  const connectedCount = connections.filter(c => c.status === "Connected").length;
+                  
+                  // Average profit margin
+                  const pricedItems = inventory.filter(item => item.price && item.cost);
+                  let avgMargin = 0;
+                  if (pricedItems.length > 0) {
+                    const sumMargin = pricedItems.reduce((acc, item) => {
+                      const cost = item.cost || 0;
+                      const profit = item.price - cost;
+                      return acc + (profit / item.price);
+                    }, 0);
+                    avgMargin = (sumMargin / pricedItems.length) * 100;
+                  } else {
+                    avgMargin = 75.0; // Standard baseline
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <div className="bg-zinc-900/40 p-2 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block uppercase">Total SKUs</span>
+                          <span className="text-sm font-mono font-bold text-slate-200">{totalSkus} Items</span>
+                        </div>
+                        <div className="bg-zinc-900/40 p-2 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block uppercase">Total Stock</span>
+                          <span className="text-sm font-mono font-bold text-slate-200">{totalQty} Units</span>
+                        </div>
+                        <div className="bg-zinc-900/40 p-2 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block uppercase">Valuation</span>
+                          <span className="text-sm font-mono font-bold text-emerald-400">${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="bg-zinc-900/40 p-2 rounded border border-zinc-850/50">
+                          <span className="text-[8px] text-zinc-500 font-mono block uppercase">Avg Margin</span>
+                          <span className="text-sm font-mono font-bold text-indigo-400">{avgMargin.toFixed(1)}%</span>
+                        </div>
+                      </div>
+
+                      {/* Micro visual indicator for active channels */}
+                      <div className="bg-zinc-900/20 rounded border border-zinc-850/60 p-2 flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-slate-400">Connected Channels</span>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-2 h-2 rounded-full ${connectedCount > 0 ? "bg-emerald-400 animate-pulse" : "bg-zinc-700"}`} />
+                          <span className="font-bold text-slate-200">{connectedCount} of 8 Connected</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Channel Standby Grid */}
+              <div className="bg-zinc-950 border border-zinc-850 rounded-xl p-4 space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider">
+                    Sovereign Marketplace Channels
+                  </span>
+                  <button
+                    onClick={() => setActiveTab("connections")}
+                    className="text-[8px] font-mono text-indigo-400 hover:underline hover:text-indigo-300 cursor-pointer"
+                  >
+                    Configure
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop", "tiktok"].map(p => {
+                    const conn = connections.find(c => c.platform === p);
+                    const isConnected = conn?.status === "Connected";
+                    return (
+                      <div
+                        key={p}
+                        onClick={() => setActiveTab("connections")}
+                        className={`p-2 rounded-lg border text-[10px] font-mono flex items-center justify-between cursor-pointer transition-all ${
+                          isConnected
+                            ? "bg-emerald-950/20 border-emerald-900/35 text-emerald-400 hover:bg-emerald-950/40"
+                            : "bg-zinc-900/20 border-zinc-850 text-slate-500 hover:text-slate-400 hover:border-zinc-800"
+                        }`}
+                        title={`Click to manage credentials for ${p.toUpperCase()}`}
+                      >
+                        <span className="font-bold uppercase">{p}</span>
+                        <div className="flex items-center gap-1">
+                          <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400 animate-pulse" : "bg-zinc-700"}`} />
+                          <span className="text-[8px] opacity-70">{isConnected ? "LIVE" : "OFF"}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
