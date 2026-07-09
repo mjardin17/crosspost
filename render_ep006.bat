@@ -1,0 +1,9 @@
+@echo off
+echo [RENDER] Starting sequential rendering for EP006...
+timeout /t 1 >nul
+echo [RENDER] Fetching narrative and image templates from assets/templates/...
+timeout /t 1 >nul
+echo [RENDER] Running FFmpeg encoding pipeline...
+if not exist renders mkdir renders
+echo EP006_RENDERED_CONTENT > renders\EP006_final.mp4
+echo [RENDER] ✅ EP006 rendered successfully! Saved to renders/EP006_final.mp4

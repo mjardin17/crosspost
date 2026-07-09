@@ -1,0 +1,13 @@
+{
+  "id": "bot_5",
+  "name": "Uploader Agent",
+  "role": "YouTube/TikTok Publishing",
+  "health": 95,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[Uploader Agent] Service initialized successfully.",
+    "[Uploader Agent] Heartbeat registered. State ok.",
+    "[Uploader Agent] Core task 'YouTube/TikTok Publishing' running on CPU thread."
+  ]
+}

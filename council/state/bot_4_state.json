@@ -1,0 +1,13 @@
+{
+  "id": "bot_4",
+  "name": "Arbitrage Agent",
+  "role": "Market Scans",
+  "health": 99,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[Arbitrage Agent] Service initialized successfully.",
+    "[Arbitrage Agent] Heartbeat registered. State ok.",
+    "[Arbitrage Agent] Core task 'Market Scans' running on CPU thread."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "bot_8",
+  "name": "Auditor Agent",
+  "role": "Workspace Compliance",
+  "health": 96,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[Auditor Agent] Service initialized successfully.",
+    "[Auditor Agent] Heartbeat registered. State ok.",
+    "[Auditor Agent] Core task 'Workspace Compliance' running on CPU thread."
+  ]
+}

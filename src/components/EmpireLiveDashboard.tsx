@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Terminal, Server, Cpu, Play, Shield, RefreshCw, CheckCircle2, AlertTriangle, 
   Bot, Calendar, Copy, Check, FileText, ArrowRight, Video, Cloud, ExternalLink,
-  Activity, Circle, Radio, Sparkles
+  Activity, Circle, Radio, Sparkles, Youtube, Mail, Link2, UserCheck
 } from "lucide-react";
 
 interface Episode {
@@ -62,6 +62,61 @@ export default function EmpireLiveDashboard() {
   const [executingUploader, setExecutingUploader] = useState<boolean>(false);
   const [executingRender, setExecutingRender] = useState<boolean>(false);
 
+  // YouTube Channel Linker states
+  const [youtubeAccount, setYoutubeAccount] = useState<any>(null);
+  const [inputEmail, setInputEmail] = useState<string>("justifiedmagnificent@gmail.com");
+  const [inputUrl, setInputUrl] = useState<string>("");
+  const [linkingLoading, setLinkingLoading] = useState<boolean>(false);
+  const [linkerFeedback, setLinkerFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const fetchYoutubeAccount = async () => {
+    try {
+      const res = await fetch("/api/youtube/account");
+      const data = await res.json();
+      if (data.success && data.account) {
+        setYoutubeAccount(data.account);
+        if (data.account.email) setInputEmail(data.account.email);
+        if (data.account.youtubeUrl) setInputUrl(data.account.youtubeUrl);
+      }
+    } catch (e) {
+      console.error("Failed to load YouTube account:", e);
+    }
+  };
+
+  const handleLinkAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputEmail) return;
+    setLinkingLoading(true);
+    setLinkerFeedback(null);
+    setTerminalLogs(prev => [`[COMMAND] Re-routing link: Connecting YouTube account for ${inputEmail}...`, ...prev]);
+
+    try {
+      const res = await fetch("/api/youtube/account/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inputEmail, youtubeUrl: inputUrl })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setYoutubeAccount(data.account);
+        setLinkerFeedback({ type: "success", text: `Channel successfully linked to ${data.account.handle}!` });
+        setTerminalLogs(prev => [
+          `[SUCCESS] YouTube Account linked: ${data.account.channelName} (${data.account.handle}) - Active status!`,
+          ...prev
+        ]);
+        // Also refresh system telemetry state
+        await fetchSystemState(true);
+      } else {
+        throw new Error(data.error || "Linking returned error status.");
+      }
+    } catch (err: any) {
+      setLinkerFeedback({ type: "error", text: err.message || "Failed to link channel." });
+      setTerminalLogs(prev => [`[FAILURE] Channel linker failed: ${err.message}`, ...prev]);
+    } finally {
+      setLinkingLoading(false);
+    }
+  };
+
   // Fetch the current state from server
   const fetchSystemState = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -95,10 +150,12 @@ export default function EmpireLiveDashboard() {
 
   useEffect(() => {
     fetchSystemState();
+    fetchYoutubeAccount();
     
     // Auto-poll state every 20 seconds to keep metrics updated
     const interval = setInterval(() => {
       fetchSystemState(true);
+      fetchYoutubeAccount();
     }, 20000);
     return () => clearInterval(interval);
   }, []);
@@ -550,6 +607,127 @@ export default function EmpireLiveDashboard() {
 
           {/* RIGHT SIDEBAR PANEL: Upload Queue, Telemetry terminal, Handoff (4 cols on XL) */}
           <div className="xl:col-span-4 space-y-6">
+
+            {/* WIDGET: YouTube Account Connector & Finder */}
+            <div className="bg-zinc-950 border border-zinc-850 rounded-xl p-5 space-y-4 animate-fade-in">
+              <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
+                <div className="flex items-center gap-2">
+                  <Youtube className="w-4.5 h-4.5 text-red-500 animate-pulse" />
+                  <span className="text-xs font-mono font-black text-slate-200 uppercase tracking-tight">
+                    YouTube Linker & Finder
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono text-zinc-500">
+                  active_profile
+                </span>
+              </div>
+
+              {/* Connected Account Details */}
+              {youtubeAccount ? (
+                <div className="bg-zinc-900 border border-zinc-850 p-4 rounded-lg space-y-3.5">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={youtubeAccount.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80"} 
+                      alt="Channel Avatar" 
+                      className="w-10 h-10 rounded-full border border-zinc-700 object-cover shadow-md"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <strong className="text-xs font-mono text-slate-200 truncate block">
+                          {youtubeAccount.channelName}
+                        </strong>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-400 block truncate">
+                        {youtubeAccount.handle}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono bg-zinc-950 p-2.5 rounded border border-zinc-900/80">
+                    <div className="space-y-0.5">
+                      <span className="text-[8px] text-zinc-500 uppercase block font-bold">Subscribers</span>
+                      <strong className="text-slate-350">{youtubeAccount.subscribers}</strong>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[8px] text-zinc-500 uppercase block font-bold">Total Videos</span>
+                      <strong className="text-slate-350">{youtubeAccount.videos}</strong>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-[10px] font-mono border-t border-zinc-850/60 pt-2.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-500">Linked Account:</span>
+                      <span className="text-slate-350 font-semibold">{youtubeAccount.email}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-500">Status:</span>
+                      <span className="text-emerald-400 font-black tracking-wide uppercase bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-900/20 text-[8px]">
+                        CONNECTED & VERIFIED
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-zinc-900/40 border border-zinc-850/60 p-4 rounded-lg text-center py-6">
+                  <span className="text-[10px] font-mono text-zinc-500 block">No active YouTube account linked.</span>
+                </div>
+              )}
+
+              {/* Form to link/re-link channel */}
+              <form onSubmit={handleLinkAccount} className="space-y-3.5">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-zinc-500" />
+                    Google Account Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={inputEmail}
+                    onChange={(e) => setInputEmail(e.target.value)}
+                    placeholder="e.g. justifiedmagnificent@gmail.com"
+                    className="w-full bg-zinc-950 border border-zinc-850 rounded-lg p-2 text-xs font-mono text-slate-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <Link2 className="w-3 h-3 text-zinc-500" />
+                    YouTube URL or Handle
+                  </label>
+                  <input
+                    type="text"
+                    value={inputUrl}
+                    onChange={(e) => setInputUrl(e.target.value)}
+                    placeholder="e.g. @EmpireMoneyHunter (optional)"
+                    className="w-full bg-zinc-950 border border-zinc-850 rounded-lg p-2 text-xs font-mono text-slate-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner"
+                  />
+                </div>
+
+                {linkerFeedback && (
+                  <div className={`p-2.5 rounded text-[10px] font-mono leading-relaxed border ${
+                    linkerFeedback.type === "success" 
+                      ? "bg-emerald-950/20 border-emerald-900/30 text-emerald-400" 
+                      : "bg-rose-950/20 border-rose-900/30 text-rose-400"
+                  }`}>
+                    {linkerFeedback.text}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={linkingLoading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-mono font-bold text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-md"
+                >
+                  <UserCheck className={`w-3.5 h-3.5 ${linkingLoading ? "animate-spin" : ""}`} />
+                  <span>
+                    {linkingLoading ? "DISCOVERING ACCOUNT..." : "FIND & LINK CHANNEL"}
+                  </span>
+                </button>
+              </form>
+            </div>
             
             {/* WIDGET 2: Upload queue controller */}
             <div className="bg-zinc-950 border border-zinc-850 rounded-xl p-5 space-y-4">

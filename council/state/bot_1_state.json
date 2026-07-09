@@ -1,0 +1,13 @@
+{
+  "id": "bot_1",
+  "name": "Monetization Bot",
+  "role": "Funnel Strategy",
+  "health": 99,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[Monetization Bot] Service initialized successfully.",
+    "[Monetization Bot] Heartbeat registered. State ok.",
+    "[Monetization Bot] Core task 'Funnel Strategy' running on CPU thread."
+  ]
+}

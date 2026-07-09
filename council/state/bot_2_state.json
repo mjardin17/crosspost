@@ -1,0 +1,13 @@
+{
+  "id": "bot_2",
+  "name": "Content Planner Bot",
+  "role": "Script Generation",
+  "health": 95,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[Content Planner Bot] Service initialized successfully.",
+    "[Content Planner Bot] Heartbeat registered. State ok.",
+    "[Content Planner Bot] Core task 'Script Generation' running on CPU thread."
+  ]
+}

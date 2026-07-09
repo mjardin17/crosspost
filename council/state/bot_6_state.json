@@ -1,0 +1,13 @@
+{
+  "id": "bot_6",
+  "name": "SEO Optimizer Bot",
+  "role": "Metatags & Descriptions",
+  "health": 99,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[SEO Optimizer Bot] Service initialized successfully.",
+    "[SEO Optimizer Bot] Heartbeat registered. State ok.",
+    "[SEO Optimizer Bot] Core task 'Metatags & Descriptions' running on CPU thread."
+  ]
+}

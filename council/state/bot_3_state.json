@@ -1,0 +1,13 @@
+{
+  "id": "bot_3",
+  "name": "Media Composer Bot",
+  "role": "FFmpeg Pipeline",
+  "health": 100,
+  "status": "ACTIVE",
+  "lastHeartbeat": "2026-07-09T10:14:19.539Z",
+  "logs": [
+    "[Media Composer Bot] Service initialized successfully.",
+    "[Media Composer Bot] Heartbeat registered. State ok.",
+    "[Media Composer Bot] Core task 'FFmpeg Pipeline' running on CPU thread."
+  ]
+}
