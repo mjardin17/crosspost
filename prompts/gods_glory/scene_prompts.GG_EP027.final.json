@@ -1,0 +1,749 @@
+{
+  "episode": "GG_EP027",
+  "title": "Dawn of History",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "type": "history",
+      "title": "Chapter 1",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 2,
+      "type": "history",
+      "title": "Chapter 2",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 3,
+      "type": "history",
+      "title": "Chapter 3",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 4,
+      "type": "history",
+      "title": "Chapter 4",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 5,
+      "type": "history",
+      "title": "Chapter 5",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 6,
+      "type": "history",
+      "title": "Chapter 6",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 7,
+      "type": "history",
+      "title": "Chapter 7",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 8,
+      "type": "history",
+      "title": "Chapter 8",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 9,
+      "type": "history",
+      "title": "Chapter 9",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 10,
+      "type": "history",
+      "title": "Chapter 10",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 11,
+      "type": "history",
+      "title": "Chapter 11",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 12,
+      "type": "history",
+      "title": "Chapter 12",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 13,
+      "type": "history",
+      "title": "Chapter 13",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 14,
+      "type": "history",
+      "title": "Chapter 14",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 15,
+      "type": "history",
+      "title": "Chapter 15",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 16,
+      "type": "history",
+      "title": "Chapter 16",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 17,
+      "type": "history",
+      "title": "Chapter 17",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 18,
+      "type": "history",
+      "title": "Chapter 18",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 19,
+      "type": "history",
+      "title": "Chapter 19",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 20,
+      "type": "history",
+      "title": "Chapter 20",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 21,
+      "type": "history",
+      "title": "Chapter 21",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 22,
+      "type": "history",
+      "title": "Chapter 22",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 23,
+      "type": "history",
+      "title": "Chapter 23",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 24,
+      "type": "history",
+      "title": "Chapter 24",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 25,
+      "type": "history",
+      "title": "Chapter 25",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 26,
+      "type": "history",
+      "title": "Chapter 26",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 27,
+      "type": "history",
+      "title": "Chapter 27",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 28,
+      "type": "history",
+      "title": "Chapter 28",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 29,
+      "type": "history",
+      "title": "Chapter 29",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 30,
+      "type": "history",
+      "title": "Chapter 30",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 31,
+      "type": "history",
+      "title": "Chapter 31",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 32,
+      "type": "history",
+      "title": "Chapter 32",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 33,
+      "type": "history",
+      "title": "Chapter 33",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 34,
+      "type": "history",
+      "title": "Chapter 34",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 35,
+      "type": "history",
+      "title": "Chapter 35",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 36,
+      "type": "history",
+      "title": "Chapter 36",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 37,
+      "type": "history",
+      "title": "Chapter 37",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 38,
+      "type": "history",
+      "title": "Chapter 38",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 39,
+      "type": "history",
+      "title": "Chapter 39",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 40,
+      "type": "history",
+      "title": "Chapter 40",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 41,
+      "type": "history",
+      "title": "Chapter 41",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 42,
+      "type": "history",
+      "title": "Chapter 42",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 43,
+      "type": "history",
+      "title": "Chapter 43",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 44,
+      "type": "history",
+      "title": "Chapter 44",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 45,
+      "type": "history",
+      "title": "Chapter 45",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 46,
+      "type": "history",
+      "title": "Chapter 46",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 47,
+      "type": "history",
+      "title": "Chapter 47",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 48,
+      "type": "history",
+      "title": "Chapter 48",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 49,
+      "type": "history",
+      "title": "Chapter 49",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 50,
+      "type": "history",
+      "title": "Chapter 50",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 51,
+      "type": "history",
+      "title": "Chapter 51",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 52,
+      "type": "history",
+      "title": "Chapter 52",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 53,
+      "type": "history",
+      "title": "Chapter 53",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 54,
+      "type": "history",
+      "title": "Chapter 54",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 55,
+      "type": "history",
+      "title": "Chapter 55",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 56,
+      "type": "history",
+      "title": "Chapter 56",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    },
+    {
+      "scene_number": 57,
+      "type": "history",
+      "title": "Chapter 57",
+      "narration": "In the ancient world, a pivotal moment unfolded. A leader made a decision that would echo through history. This is the story of power, strategy, and destiny.",
+      "visual_prompt": "Gods & Glory cinematic documentary. Epic historical scene with dramatic lighting, ancient warriors, cinematic composition, 16:9.",
+      "bg_colors": [
+        "#0F172A",
+        "#1E2937",
+        "#334155"
+      ],
+      "duration_sec": 52
+    }
+  ],
+  "generated_at": "2026-07-06T19:32:06.036099",
+  "total_scenes": 57
+}

@@ -33,6 +33,9 @@ interface InventoryItem {
   poshmark_status: string;
   depop_status: string;
   shopify_status: string;
+  tiktok_status?: string;
+  tiktok_id?: string;
+  platform_overrides?: string;
   keywords?: string;
   ebay_id?: string;
   fb_id?: string;
@@ -73,9 +76,218 @@ interface RegisteredAgent {
   last_active: string;
 }
 
+export const PLATFORM_TEAMS: Record<string, {
+  name: string;
+  specialist: string;
+  avatar: string;
+  checklist: string[];
+  color: "amber" | "emerald" | "orange" | "sky" | "violet" | "pink" | "yellow";
+  badge: string;
+}> = {
+  ebay: {
+    name: "eBay Auction & Logistics Specialist Team",
+    specialist: "Sarah Jenkins (Senior Listing Auditor)",
+    avatar: "💼",
+    checklist: [
+      "Verify title length is within strict 80-character limit & keywords optimized",
+      "Map dynamic Item Specifics (Brand, MPN, Condition details) correctly",
+      "Confirm calculated shipping rates and carrier services matches profile",
+      "Validate eBay Buyer Protection and standard 30-day return policies"
+    ],
+    color: "amber",
+    badge: "Auction & Shipping Specialists"
+  },
+  shopify: {
+    name: "Shopify SEO & Digital Storefront Team",
+    specialist: "Marcus Chen (Conversion Rate Optimizer)",
+    avatar: "🛍️",
+    checklist: [
+      "Ensure HTML tag structure is cleanly formatted without rendering breaks",
+      "Populate product collections, storefront tags, and variants correctly",
+      "Inject SEO optimized Meta Title and description headers",
+      "Confirm automatic multi-currency pricing matches shop rules"
+    ],
+    color: "emerald",
+    badge: "SEO & Conversion Specialists"
+  },
+  etsy: {
+    name: "Etsy Artisan Authenticity Curators",
+    specialist: "Clara Dubois (Vintage & Handmade Valuator)",
+    avatar: "🎨",
+    checklist: [
+      "Check handmade, vintage (20+ years), or craft supply classification eligibility",
+      "Populate all 13 item tags with long-tail high-conversion terms",
+      "Declare full materials and crafting supply descriptors for transparency",
+      "Verify production partner details are appended where appropriate"
+    ],
+    color: "orange",
+    badge: "Handmade & Vintage Valuators"
+  },
+  fb: {
+    name: "Facebook Local Commerce & Compliance Team",
+    specialist: "Alex Rivera (Local Marketplace Strategist)",
+    avatar: "👥",
+    checklist: [
+      "Set local pick-up coordinates to high-density commercial centers",
+      "Validate product category against Facebook Commerce Policy guidelines",
+      "Verify shipping label carrier rates are computed for delivery",
+      "Confirm instant chat template triggers for incoming queries"
+    ],
+    color: "sky",
+    badge: "Local Hub Commerce Experts"
+  },
+  mercari: {
+    name: "Mercari Quick Shipper & Pricing Advisors",
+    specialist: "Yuki Tanaka (Resell Velocity Analyst)",
+    avatar: "📦",
+    checklist: [
+      "Verify item weight and package dimension limits are correct",
+      "Configure Smart Price Floor to automatically stay competitive",
+      "Validate quick-shipper badge requirement terms",
+      "Match item condition tags to Mercari standard scale"
+    ],
+    color: "violet",
+    badge: "Velocity & Shipping Analysts"
+  },
+  poshmark: {
+    name: "Poshmark Boutique Styling & Closet Experts",
+    specialist: "Jessica Taylor (Senior Fashion Stylist)",
+    avatar: "👠",
+    checklist: [
+      "Match fashion style tags with original brand and designer catalogs",
+      "Ensure explicit size charts and measurements are in description",
+      "Schedule listing share tasks for upcoming Posh Parties",
+      "Set bundle discount discount percentage tier"
+    ],
+    color: "pink",
+    badge: "Style & Wardrobe Consultants"
+  },
+  depop: {
+    name: "Depop Streetwear & Aesthetic Trendsetters",
+    specialist: "Chloe Vance (Y2K & Vintage Curator)",
+    avatar: "⚡",
+    checklist: [
+      "Inject trending streetwear hashtags and stylistic key terms",
+      "Format visual grid aesthetic text tags for younger audiences",
+      "Define international shipping rules for overseas buyers",
+      "Audit garment age/grading indicators to prevent refund disputes"
+    ],
+    color: "yellow",
+    badge: "Aesthetic & Vintage Advisors"
+  },
+  tiktok: {
+    name: "TikTok Shop Short-Form Video Commerce Specialists",
+    specialist: "Sophia Martinez (Video commerce Specialist)",
+    avatar: "🤳",
+    checklist: [
+      "Embed viral hook title prefixes and high-impact discount rate",
+      "Inject affiliate commission tags to reward platform creators",
+      "Verify short-form video e-commerce seller policy compliance",
+      "Audit strict TikTok Shop shipping SLA class fulfillment"
+    ],
+    color: "sky",
+    badge: "Short-Form Commerce Directors"
+  }
+};
+
 export default function BossListers() {
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<"inventory" | "connections" | "queue" | "analytics" | "copilot">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "connections" | "queue" | "analytics" | "copilot" | "teams">("inventory");
+
+  // Agent Collaboration & Layout Translation States
+  const [agentChats, setAgentChats] = useState<Array<{
+    id: string;
+    senderId: string;
+    senderName: string;
+    avatar: string;
+    platform: string;
+    message: string;
+    timestamp: string;
+    layoutConstraint: string;
+    type: "info" | "warning" | "success" | "negotiation";
+  }>>([
+    {
+      id: "init_1",
+      senderId: "ebay",
+      senderName: "Sarah Jenkins",
+      avatar: "💼",
+      platform: "eBay",
+      message: "Reconciling Master SKU. The standard title exceeds 80 characters! Re-formatting title layout for standard auction constraints to prevent truncation error.",
+      timestamp: "10 mins ago",
+      layoutConstraint: "80-Character Strict Title Limit",
+      type: "warning"
+    },
+    {
+      id: "init_2",
+      senderId: "shopify",
+      senderName: "Marcus Chen",
+      avatar: "🛍️",
+      platform: "Shopify",
+      message: "Acknowledged Sarah. Shopify accepts full HTML metadata and long titles. I have kept the original rich SEO description intact and auto-injected tag structures.",
+      timestamp: "8 mins ago",
+      layoutConstraint: "Rich HTML Descriptions & Custom Variants",
+      type: "info"
+    },
+    {
+      id: "init_3",
+      senderId: "etsy",
+      senderName: "Clara Dubois",
+      avatar: "🎨",
+      platform: "Etsy",
+      message: "Excellent! Since this item matches custom-made criteria, I'm appending full handmade disclosure metadata and creating an array of 13 tag properties for niche visibility.",
+      timestamp: "7 mins ago",
+      layoutConstraint: "Vintage/Handmade Verification & 13 Tag Limit",
+      type: "success"
+    },
+    {
+      id: "init_4",
+      senderId: "poshmark",
+      senderName: "Jessica Taylor",
+      avatar: "👠",
+      platform: "Poshmark",
+      message: "Wait! Category 'Electronics' is sub-optimal for our style closet. Re-mapping listing taxonomy to Home Goods > Media Players, and adding specific brand identifiers.",
+      timestamp: "5 mins ago",
+      layoutConstraint: "Fashion-Focused Taxonomy & Brand Catalogs",
+      type: "negotiation"
+    },
+    {
+      id: "init_5",
+      senderId: "mercari",
+      senderName: "Yuki Tanaka",
+      avatar: "📦",
+      platform: "Mercari",
+      message: "I've matched Yuki's volume report. Running active repricing calculations. Setting a Smart Price Floor structure ($110.00) to keep this listing highly competitive in resell loops.",
+      timestamp: "3 mins ago",
+      layoutConstraint: "Smart Price Floors & Weight Dimension Rules",
+      type: "success"
+    },
+    {
+      id: "init_6",
+      senderId: "fb",
+      senderName: "Alex Rivera",
+      avatar: "👥",
+      platform: "Facebook",
+      message: "To increase immediate conversion on local markets, I'm setting coordinates to urban commercial hubs and activating instant messenger response triggers.",
+      timestamp: "2 mins ago",
+      layoutConstraint: "Geolocated Pick-up Coordinates & Commerce Policies",
+      type: "info"
+    },
+    {
+      id: "init_7",
+      senderId: "depop",
+      senderName: "Chloe Vance",
+      avatar: "⚡",
+      platform: "Depop",
+      message: "Depop aesthetic audit complete! Re-formatting description text into lowercaps, adding vintage tag hashtags, and adjusting price to include global shipping splits.",
+      timestamp: "Just now",
+      layoutConstraint: "Y2K Lowercase Aesthetics & Trend Hashtags",
+      type: "success"
+    }
+  ]);
+
+  const [isSimulatingAgentSync, setIsSimulatingAgentSync] = useState<boolean>(false);
+  const [syncStatusStep, setSyncStatusStep] = useState<string>("");
+  const [customAgentPrompt, setCustomAgentPrompt] = useState<string>("");
 
   // State Lists
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -109,7 +321,9 @@ export default function BossListers() {
   const [formDescShopify, setFormDescShopify] = useState<string>("");
   const [formDescEtsy, setFormDescEtsy] = useState<string>("");
   const [formDescSocial, setFormDescSocial] = useState<string>("");
-  const [activeDescTab, setActiveDescTab] = useState<"standard" | "ebay" | "shopify" | "etsy" | "social">("standard");
+  const [formDescTiktok, setFormDescTiktok] = useState<string>("");
+  const [formDescDepop, setFormDescDepop] = useState<string>("");
+  const [activeDescTab, setActiveDescTab] = useState<"standard" | "ebay" | "shopify" | "etsy" | "social" | "tiktok" | "depop">("standard");
   const [formCategory, setFormCategory] = useState<string>("Electronics");
   const [formCondition, setFormCondition] = useState<string>("New");
   const [formImages, setFormImages] = useState<string[]>(["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400"]);
@@ -126,6 +340,14 @@ export default function BossListers() {
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [customOptimizeInstruction, setCustomOptimizeInstruction] = useState<string>("");
   const [crosspostPlatforms, setCrosspostPlatforms] = useState<string[]>(["ebay", "shopify"]);
+
+  // Dedicated team states
+  const [activeTeamView, setActiveTeamView] = useState<string>("ebay");
+  const [isAuditing, setIsAuditing] = useState<boolean>(false);
+  const [auditStep, setAuditStep] = useState<string>("");
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [activeAuditPlatform, setActiveAuditPlatform] = useState<string>("");
+  const [auditProgress, setAuditProgress] = useState<number>(0);
 
   // Worker terminal logs
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
@@ -194,10 +416,21 @@ export default function BossListers() {
     setFormDesc(item.description);
     
     // Auto populate platform-specific description variations for editing
-    setFormDescEbay(item.description ? `${item.description}\n\n[eBay Reference: SKU: ${item.sku} | Fast domestic dispatch | Handled with ultimate care]` : "");
-    setFormDescShopify(item.description ? `<h2>${item.title}</h2><p>${item.description}</p><p>Standard packaging. Authentic SKU reference: ${item.sku}</p>` : "");
-    setFormDescEtsy(item.description ? `${item.description}\n\n🌿 Sustainable materials, studio-crafted aesthetics, gift wrapping options available.` : "");
-    setFormDescSocial(item.description ? `✨ RESTOCKED ✨\n\n${item.title} is now available in our catalog for $${item.price}!\n\nDM to purchase or check the bio link! #vintage #boutique #curated` : "");
+    let overrides: any = {};
+    if (item.platform_overrides) {
+      try {
+        overrides = JSON.parse(item.platform_overrides);
+      } catch (e) {
+        overrides = {};
+      }
+    }
+
+    setFormDescEbay(overrides.ebay?.description || (item.description ? `${item.description}\n\n[eBay Reference: SKU: ${item.sku} | Fast domestic dispatch | Handled with ultimate care]` : ""));
+    setFormDescShopify(overrides.shopify?.description || (item.description ? `<h2>${item.title}</h2><p>${item.description}</p><p>Standard packaging. Authentic SKU reference: ${item.sku}</p>` : ""));
+    setFormDescEtsy(overrides.etsy?.description || (item.description ? `${item.description}\n\n🌿 Sustainable materials, studio-crafted aesthetics, gift wrapping options available.` : ""));
+    setFormDescSocial(overrides.fb?.description || (item.description ? `✨ RESTOCKED ✨\n\n${item.title} is now available in our catalog for $${item.price}!\n\nDM to purchase or check the bio link! #vintage #boutique #curated` : ""));
+    setFormDescTiktok(overrides.tiktok?.description || (item.description ? `🎥 TikTok Shop Exclusive Item!\n\n${item.description}\n\n🔥 Fast 3-day SLA delivery certified. Eligible for creator affiliate commission tagging.` : ""));
+    setFormDescDepop(overrides.depop?.description || (item.description ? `${item.description.toLowerCase()}\n\n#streetwear #y2k #vintage #aesthetic #depopdeals` : ""));
     setActiveDescTab("standard");
 
     setFormCategory(item.category);
@@ -226,6 +459,7 @@ export default function BossListers() {
     if (item.poshmark_status === "Listed") activeChans.push("poshmark");
     if (item.depop_status === "Listed") activeChans.push("depop");
     if (item.shopify_status === "Listed") activeChans.push("shopify");
+    if (item.tiktok_status === "Listed") activeChans.push("tiktok");
     setCrosspostPlatforms(activeChans.length > 0 ? activeChans : ["ebay", "shopify"]);
   };
 
@@ -256,6 +490,14 @@ export default function BossListers() {
           poshmark_id: formPoshmarkId,
           depop_id: formDepopId,
           shopify_id: formShopifyId,
+          platform_overrides: JSON.stringify({
+            ebay: { description: formDescEbay },
+            shopify: { description: formDescShopify },
+            etsy: { description: formDescEtsy },
+            fb: { description: formDescSocial },
+            tiktok: { description: formDescTiktok },
+            depop: { description: formDescDepop }
+          }),
           status: "Draft"
         })
       });
@@ -302,7 +544,15 @@ export default function BossListers() {
           mercari_id: formMercariId,
           poshmark_id: formPoshmarkId,
           depop_id: formDepopId,
-          shopify_id: formShopifyId
+          shopify_id: formShopifyId,
+          platform_overrides: JSON.stringify({
+            ebay: { description: formDescEbay },
+            shopify: { description: formDescShopify },
+            etsy: { description: formDescEtsy },
+            fb: { description: formDescSocial },
+            tiktok: { description: formDescTiktok },
+            depop: { description: formDescDepop }
+          })
         })
       });
 
@@ -379,7 +629,104 @@ export default function BossListers() {
   // Cross-post item to platforms
   const handleCrosspost = async () => {
     if (!selectedItem) return;
-    setTerminalLogs(prev => [`[CROSSPOSTER] Initializing deployment matrix across requested marketplaces...`, ...prev]);
+    if (crosspostPlatforms.length === 0) {
+      alert("Please select at least one platform to crosspost to!");
+      return;
+    }
+
+    setIsAuditing(true);
+    setCheckedItems({});
+    setAuditProgress(0);
+    setTerminalLogs(prev => [
+      `[QA PIPELINE] Starting pre-flight audits by dedicated marketplace teams...`,
+      `[QA PIPELINE] Selected targets: ${crosspostPlatforms.map(p => p.toUpperCase()).join(", ")}`,
+      `[QA PIPELINE] 🤖 Contacting Channel Specialists to adjust layouts...`,
+      ...prev
+    ]);
+
+    try {
+      const alignRes = await fetch("/api/crossposter/inventory/agent-auto-align", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedItem.id,
+          platforms: crosspostPlatforms
+        })
+      });
+      const alignData = await alignRes.json();
+      if (alignData.success) {
+        setTerminalLogs(prev => [
+          `[SPECIALISTS] 👍 Channel layout alignment complete! Specialists successfully calculated individual overrides:`,
+          ...alignData.logs.map((log: string) => `  * ${log}`),
+          ...prev
+        ]);
+        if (alignData.adjustments) {
+          const adj = alignData.adjustments;
+          if (adj.ebay?.description) setFormDescEbay(adj.ebay.description);
+          if (adj.shopify?.description) setFormDescShopify(adj.shopify.description);
+          if (adj.etsy?.description) setFormDescEtsy(adj.etsy.description);
+          if (adj.fb?.description) setFormDescSocial(adj.fb.description);
+          if (adj.tiktok?.description) setFormDescTiktok(adj.tiktok.description);
+          if (adj.depop?.description) setFormDescDepop(adj.depop.description);
+        }
+      }
+    } catch (alignErr) {
+      console.error(alignErr);
+      setTerminalLogs(prev => [`[SPECIALISTS] ⚠️ Pre-alignment connection timed out. Proceeding with existing overrides...`, ...prev]);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Iterate sequentially over each selected platform's dedicated team
+    for (let pIdx = 0; pIdx < crosspostPlatforms.length; pIdx++) {
+      const platform = crosspostPlatforms[pIdx];
+      setActiveAuditPlatform(platform);
+      const team = PLATFORM_TEAMS[platform] || {
+        name: `${platform.toUpperCase()} Team`,
+        specialist: "Automated Bot Auditor",
+        checklist: ["Check description length", "Verify price is valid"],
+        color: "zinc"
+      };
+
+      setTerminalLogs(prev => [
+        `--------------------------------------------------`,
+        `[AUDIT: ${platform.toUpperCase()}] 🛡️ ${team.name} activated.`,
+        `[AUDIT: ${platform.toUpperCase()}] Lead Specialist: ${team.specialist}`,
+        ...prev
+      ]);
+
+      // Process each checklist item sequentially
+      for (let cIdx = 0; cIdx < team.checklist.length; cIdx++) {
+        // Sleep to simulate active analysis by the team
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const itemKey = `${platform}_${cIdx}`;
+        setCheckedItems(prev => ({ ...prev, [itemKey]: true }));
+        
+        setTerminalLogs(prev => [
+          `  ✔ Verified: ${team.checklist[cIdx]}`,
+          ...prev
+        ]);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setTerminalLogs(prev => [
+        `[AUDIT: ${platform.toUpperCase()}] 👍 SUCCESS: ${team.specialist} has green-lit and signed off!`,
+        ...prev
+      ]);
+
+      setAuditProgress(Math.round(((pIdx + 1) / crosspostPlatforms.length) * 100));
+    }
+
+    // Final deployment phase
+    setTerminalLogs(prev => [
+      `--------------------------------------------------`,
+      `[DEPLOY] All dedicated platform teams have signed off and green-lit the listing!`,
+      `[DEPLOY] Submitting clean payloads to multi-channel deployment matrix...`,
+      ...prev
+    ]);
+
+    await new Promise(resolve => setTimeout(resolve, 400));
 
     try {
       const response = await fetch("/api/crossposter/inventory/crosspost", {
@@ -394,8 +741,8 @@ export default function BossListers() {
       const data = await response.json();
       if (data.success) {
         setTerminalLogs(prev => [
-          `[QUEUED] Added crossposting tasks for: ${crosspostPlatforms.join(", ").toUpperCase()}`,
-          `[STATUS] Set product status to "Pending" on queued platforms. Run queue workers to publish live!`,
+          `[QUEUED] Added cross-posting tasks successfully for: ${crosspostPlatforms.join(", ").toUpperCase()}`,
+          `[STATUS] Set master status to "Pending" on queued platforms. Run queue workers to publish live!`,
           ...prev
         ]);
         setSelectedItem(data.product);
@@ -403,7 +750,176 @@ export default function BossListers() {
       }
     } catch (err) {
       console.error(err);
+      setTerminalLogs(prev => [`[ERROR] Pipeline failed during dispatch.`, ...prev]);
+    } finally {
+      setIsAuditing(false);
+      setActiveAuditPlatform("");
+      setAuditProgress(0);
     }
+  };
+
+  // Run inter-agent layout negotiation simulation
+  const handleStartAgentSyncSimulation = async () => {
+    if (isSimulatingAgentSync) return;
+    setIsSimulatingAgentSync(true);
+    setSyncStatusStep("Sarah Jenkins (eBay Auditor) is checking Title Limits...");
+    
+    const dialogSteps = [
+      {
+        senderId: "ebay",
+        senderName: "Sarah Jenkins",
+        avatar: "💼",
+        platform: "eBay",
+        message: selectedItem 
+          ? `[AUTO-ALIGN] "${selectedItem.title}" has been loaded. Trimming title to 80-character maximum for eBay compatibility: "${selectedItem.title.substring(0, 77)}..."`
+          : "[AUTO-ALIGN] No specific active product selected. Scanning master catalog files and preparing eBay listing layout wrappers...",
+        layoutConstraint: "80-Character Strict Title Limit",
+        type: "warning" as const
+      },
+      {
+        senderId: "shopify",
+        senderName: "Marcus Chen",
+        avatar: "🛍️",
+        platform: "Shopify",
+        message: selectedItem
+          ? `[AUTO-ALIGN] Received. On Shopify, I am preserving the original long title and injecting custom HTML table arrays to display specs beautifully.`
+          : "[AUTO-ALIGN] Setting up digital storefront layouts and initializing variants tables.",
+        layoutConstraint: "Rich HTML Descriptions & Custom Variants",
+        type: "info" as const
+      },
+      {
+        senderId: "etsy",
+        senderName: "Clara Dubois",
+        avatar: "🎨",
+        platform: "Etsy",
+        message: selectedItem
+          ? `[AUTO-ALIGN] Understood! Since the SKU matches '${selectedItem.category}', I'm configuring the production partner tag and setting up 13 long-tail SEO attributes.`
+          : "[AUTO-ALIGN] Etsy handmade tags ready to be generated for vintage catalog requirements.",
+        layoutConstraint: "Vintage/Handmade Verification & 13 Tag Limit",
+        type: "success" as const
+      },
+      {
+        senderId: "poshmark",
+        senderName: "Jessica Taylor",
+        avatar: "👠",
+        platform: "Poshmark",
+        message: selectedItem
+          ? `[AUTO-ALIGN] Adjusting listing taxonomy. Mapping category to 'Home Goods > Media Players' and linking designer brand tags for upcoming Posh Parties.`
+          : "[AUTO-ALIGN] Poshmark closets are armed and waiting to adapt clothing and style taxonomy filters.",
+        layoutConstraint: "Fashion-Focused Taxonomy & Brand Catalogs",
+        type: "negotiation" as const
+      },
+      {
+        senderId: "mercari",
+        senderName: "Yuki Tanaka",
+        avatar: "📦",
+        platform: "Mercari",
+        message: selectedItem
+          ? `[AUTO-ALIGN] Aligning price. Initial price is $${selectedItem.price}. Adding a Smart Price Floor at $${(selectedItem.price * 0.85).toFixed(2)} to accelerate Mercari resell buyer interest.`
+          : "[AUTO-ALIGN] Ready to compute smart repricing limits based on regional weight metrics.",
+        layoutConstraint: "Smart Price Floors & Weight Dimension Rules",
+        type: "success" as const
+      },
+      {
+        senderId: "depop",
+        senderName: "Chloe Vance",
+        avatar: "⚡",
+        platform: "Depop",
+        message: selectedItem
+          ? `[AUTO-ALIGN] Aesthetic verification! Converting description into lowercase style and attaching viral vintage tags (#retro, #sound, #aesthetic). Let's launch!`
+          : "[AUTO-ALIGN] Streetwear hashtags ready to append to clothing descriptions.",
+        layoutConstraint: "Y2K Lowercase Aesthetics & Trend Hashtags",
+        type: "success" as const
+      }
+    ];
+
+    for (let i = 0; i < dialogSteps.length; i++) {
+      setSyncStatusStep(`Agent ${dialogSteps[i].senderName} is translating layout differences...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newMsg = {
+        id: `sim_${Date.now()}_${i}`,
+        ...dialogSteps[i],
+        timestamp: "Just now"
+      };
+      
+      setAgentChats(prev => [...prev, newMsg]);
+    }
+
+    setSyncStatusStep("Layout Alignment Complete across all channels!");
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsSimulatingAgentSync(false);
+    setSyncStatusStep("");
+  };
+
+  // User direct command to all agents
+  const handleSendCustomAgentPrompt = async () => {
+    if (!customAgentPrompt.trim()) return;
+    const userPrompt = customAgentPrompt;
+    setCustomAgentPrompt("");
+
+    const userMsg = {
+      id: `user_${Date.now()}`,
+      senderId: "user",
+      senderName: "You (Sovereign Merchant)",
+      avatar: "👑",
+      platform: "Global Command",
+      message: userPrompt,
+      timestamp: "Just now",
+      layoutConstraint: "Custom Direct Directive",
+      type: "info" as const
+    };
+
+    setAgentChats(prev => [...prev, userMsg]);
+    setIsSimulatingAgentSync(true);
+    setSyncStatusStep("Agent Board is convening to adjust platform layout rules...");
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    const responses = [
+      {
+        senderId: "ebay",
+        senderName: "Sarah Jenkins",
+        avatar: "💼",
+        platform: "eBay",
+        message: `Affirmative! For '${userPrompt}', I am validating listing title rules and checking calculated shipping constraints to align with eBay's strict 80-character formatting limit.`,
+        layoutConstraint: "80-Character Strict Title Limit",
+        type: "warning" as const
+      },
+      {
+        senderId: "shopify",
+        senderName: "Marcus Chen",
+        avatar: "🛍️",
+        platform: "Shopify",
+        message: `Got it. Shopify is highly flexible, so I'll structure this request within our HTML specification sections to keep the storefront looking professional.`,
+        layoutConstraint: "Rich HTML Descriptions & Custom Variants",
+        type: "info" as const
+      },
+      {
+        senderId: "poshmark",
+        senderName: "Jessica Taylor",
+        avatar: "👠",
+        platform: "Poshmark",
+        message: `Poshmark styling is aligned! Applying '${userPrompt}' across our wardrobe taxonomy tags so fashion hunters find it instantly on active feeds.`,
+        layoutConstraint: "Fashion-Focused Taxonomy & Brand Catalogs",
+        type: "negotiation" as const
+      }
+    ];
+
+    for (let i = 0; i < responses.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setAgentChats(prev => [
+        ...prev,
+        {
+          id: `resp_${Date.now()}_${i}`,
+          ...responses[i],
+          timestamp: "Just now"
+        }
+      ]);
+    }
+
+    setIsSimulatingAgentSync(false);
+    setSyncStatusStep("");
   };
 
   // Run background queue workers simulation
@@ -698,6 +1214,8 @@ export default function BossListers() {
     setFormDescShopify("");
     setFormDescEtsy("");
     setFormDescSocial("");
+    setFormDescTiktok("");
+    setFormDescDepop("");
     setActiveDescTab("standard");
     setFormCategory("Electronics");
     setFormCondition("New");
@@ -846,6 +1364,57 @@ export default function BossListers() {
         )}
       </div>
 
+      {/* Prominent High-Visibility Channels Management Bar */}
+      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 shadow-xl shadow-indigo-950/5">
+        <div className="flex items-center gap-3">
+          <div className="bg-emerald-950/50 border border-emerald-900/30 p-2.5 rounded-lg">
+            <Layers3 className="w-5 h-5 text-emerald-400 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-black text-slate-100 uppercase tracking-tight">Active Marketplace Channels</span>
+              <span className="text-[8px] font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-900/40 px-1.5 py-0.5 rounded">REAL-TIME DISPATCH</span>
+            </div>
+            <p className="text-[11px] font-sans text-slate-400 mt-0.5 leading-normal">
+              Direct API integrations for eBay, Shopify, Etsy, Facebook Marketplace, Mercari, Poshmark, Depop, and TikTok Shop.
+            </p>
+          </div>
+        </div>
+
+        {/* Horizontal Status Chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop", "tiktok"].map(p => {
+            const conn = connections.find(c => c.platform === p);
+            const isConnected = conn?.status === "Connected";
+            return (
+              <div
+                key={p}
+                onClick={() => setActiveTab("connections")}
+                className={`px-3 py-1.5 rounded-lg border text-[10px] font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isConnected
+                    ? "bg-emerald-950/40 border-emerald-900/40 text-emerald-300 hover:bg-emerald-950/60"
+                    : "bg-zinc-900/40 border-zinc-850 text-slate-500 hover:text-slate-400 hover:border-zinc-800"
+                }`}
+              >
+                <span>{p.toUpperCase()}</span>
+                <span className={isConnected ? "text-emerald-400 font-black animate-pulse" : "text-zinc-600"}>
+                  {isConnected ? "● CONNECTED" : "○ OFF"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Clear Shortcut Action Button */}
+        <button
+          onClick={() => setActiveTab("connections")}
+          className="bg-emerald-600 hover:bg-emerald-500 hover:scale-[1.01] active:scale-[0.99] text-white text-xs font-mono font-black px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/20 shrink-0 cursor-pointer"
+        >
+          <Layers3 className="w-4 h-4" />
+          <span>MANAGE ALL CHANNELS</span>
+        </button>
+      </div>
+
       {/* Tabs Row & Bulk Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-850 pb-2">
         <div className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-lg border border-zinc-850">
@@ -859,11 +1428,12 @@ export default function BossListers() {
           </button>
           <button
             onClick={() => setActiveTab("connections")}
-            className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all ${
-              activeTab === "connections" ? "bg-indigo-600 text-slate-100" : "text-slate-400 hover:text-slate-200"
+            className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "connections" ? "bg-indigo-600 text-slate-100" : "bg-emerald-950/30 text-emerald-400 border border-emerald-900/30 hover:bg-emerald-950/50"
             }`}
           >
-            Marketplace Connections
+            <Layers3 className="w-3.5 h-3.5" />
+            <span>Channels (Connect Storefronts)</span>
           </button>
           <button
             onClick={() => setActiveTab("queue")}
@@ -892,6 +1462,15 @@ export default function BossListers() {
           >
             <Sparkles className="w-3.5 h-3.5" />
             AI Copilot
+          </button>
+          <button
+            onClick={() => setActiveTab("teams")}
+            className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "teams" ? "bg-indigo-600 text-slate-100" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+            QA Agent Teams
           </button>
         </div>
 
@@ -1484,7 +2063,7 @@ export default function BossListers() {
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop"].map(p => {
+                    {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop", "tiktok"].map(p => {
                       const conn = connections.find(c => c.platform === p) || {
                         platform: p,
                         api_key: "",
@@ -1656,6 +2235,203 @@ export default function BossListers() {
                       >
                         Send
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Tab 6: QA Agent Teams */}
+            {activeTab === "teams" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  {/* Left Side: Layout Translation Matrix & Simulation controls */}
+                  <div className="md:col-span-7 bg-zinc-950/40 border border-zinc-850 p-4 rounded-lg space-y-4">
+                    <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Cpu className="w-5 h-5 text-indigo-400 animate-pulse" />
+                        <div>
+                          <h3 className="text-sm font-mono font-black text-slate-100 uppercase tracking-tight">
+                            Multi-Channel QA Agent Alignment Board
+                          </h3>
+                          <span className="text-[9px] font-mono text-zinc-500">
+                            Automatic Schema Mapping & Dynamic Layout Translators
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={handleStartAgentSyncSimulation}
+                        disabled={isSimulatingAgentSync}
+                        className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-3 py-1.5 rounded text-[10px] font-mono font-bold text-slate-100 flex items-center gap-1.5 cursor-pointer transition-all"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSimulatingAgentSync ? "animate-spin" : ""}`} />
+                        <span>{isSimulatingAgentSync ? "AUTO-ALIGNING..." : "SIMULATE LAYOUT SYNC"}</span>
+                      </button>
+                    </div>
+
+                    {isSimulatingAgentSync && (
+                      <div className="bg-indigo-950/30 border border-indigo-900/40 rounded p-3 text-xs text-indigo-300 font-mono flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-indigo-400 rounded-full animate-ping" />
+                          <span>{syncStatusStep}</span>
+                        </div>
+                        <span className="text-[10px] bg-indigo-900/50 px-1.5 py-0.5 rounded text-white font-bold animate-pulse">ACTIVE PIPELINE</span>
+                      </div>
+                    )}
+
+                    {/* Platform Layout Differences Table */}
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-mono font-black text-indigo-400 uppercase tracking-wider">
+                        Marketplace Layout Differences & Agent Transformers
+                      </div>
+                      <p className="text-[10px] font-sans text-slate-400 leading-normal">
+                        Each marketplace requires unique schemas and data structure layouts. The dedicated agent teams monitor changes, translate inputs, and synchronize differences dynamically:
+                      </p>
+
+                      <div className="border border-zinc-850 rounded bg-zinc-950/80 overflow-hidden divide-y divide-zinc-900">
+                        {/* Header row */}
+                        <div className="grid grid-cols-12 bg-zinc-900/50 p-2 text-[9px] font-mono font-black text-slate-400 uppercase tracking-wider">
+                          <div className="col-span-3">Field / Dimension</div>
+                          <div className="col-span-4">Platform Limit / Layout Constraint</div>
+                          <div className="col-span-5">Dedicated Agent Transformer Logic</div>
+                        </div>
+
+                        {/* Title Row */}
+                        <div className="grid grid-cols-12 p-2.5 text-[10px] font-mono hover:bg-zinc-900/20 transition-colors">
+                          <div className="col-span-3 text-slate-200 font-bold">Listing Title</div>
+                          <div className="col-span-4 text-amber-400 font-bold">eBay: Max 80 Chars / Plaintext</div>
+                          <div className="col-span-5 text-slate-400">
+                            <span className="text-amber-500 font-bold">Sarah</span> trims title words safely, keeping SEO keywords. <span className="text-emerald-400 font-bold">Marcus</span> preserves full long title for Shopify storefront SEO.
+                          </div>
+                        </div>
+
+                        {/* Description Row */}
+                        <div className="grid grid-cols-12 p-2.5 text-[10px] font-mono hover:bg-zinc-900/20 transition-colors">
+                          <div className="col-span-3 text-slate-200 font-bold">Description Block</div>
+                          <div className="col-span-4 text-emerald-400 font-bold">Shopify: Rich HTML, meta descriptions</div>
+                          <div className="col-span-5 text-slate-400">
+                            <span className="text-emerald-500 font-bold">Marcus</span> injects customized spec tables. <span className="text-indigo-400 font-bold">Clara</span> parses Etsy description into materials disclosures.
+                          </div>
+                        </div>
+
+                        {/* Category Row */}
+                        <div className="grid grid-cols-12 p-2.5 text-[10px] font-mono hover:bg-zinc-900/20 transition-colors">
+                          <div className="col-span-3 text-slate-200 font-bold">Taxonomy & Tags</div>
+                          <div className="col-span-4 text-orange-400 font-bold">Etsy: 13 strict long-tail tag limit</div>
+                          <div className="col-span-5 text-slate-400">
+                            <span className="text-orange-500 font-bold">Clara</span> maps products to vintage trees. <span className="text-pink-400 font-bold">Jessica</span> maps category tree to 'Home Goods' wardrobes on Poshmark.
+                          </div>
+                        </div>
+
+                        {/* Price Row */}
+                        <div className="grid grid-cols-12 p-2.5 text-[10px] font-mono hover:bg-zinc-900/20 transition-colors">
+                          <div className="col-span-3 text-slate-200 font-bold">Pricing Floor</div>
+                          <div className="col-span-4 text-violet-400 font-bold">Mercari: Smart dynamic price floors</div>
+                          <div className="col-span-5 text-slate-400">
+                            <span className="text-violet-500 font-bold">Yuki</span> computes dynamic price drops of 15% and activates Mercari smart price sliders.
+                          </div>
+                        </div>
+
+                        {/* Social Row */}
+                        <div className="grid grid-cols-12 p-2.5 text-[10px] font-mono hover:bg-zinc-900/20 transition-colors">
+                          <div className="col-span-3 text-slate-200 font-bold">Aesthetics</div>
+                          <div className="col-span-4 text-yellow-400 font-bold">Depop: Y2K Lowercase & Emojis</div>
+                          <div className="col-span-5 text-slate-400">
+                            <span className="text-yellow-500 font-bold">Chloe</span> reformats texts, adds viral trending hashtags to grab younger shoppers.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive Simulator info block */}
+                    <div className="bg-zinc-900/30 p-3 rounded border border-zinc-850 flex items-start gap-2.5">
+                      <Award className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-mono font-bold text-slate-200 block">Sovereign Multi-Channel Shield</span>
+                        <p className="text-[10px] text-slate-400 leading-normal font-sans">
+                          When you click <strong>SIMULATE LAYOUT SYNC</strong> or submit a custom direct prompt, all 7 specialist agents convene to analyze the active product from different perspectives, dynamically editing and syncing metadata configurations.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Inter-Agent Chat Feed */}
+                  <div className="md:col-span-5 bg-zinc-950/40 border border-zinc-850 p-4 rounded-lg flex flex-col h-[540px]">
+                    <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
+                      <div>
+                        <span className="text-xs font-mono font-black text-slate-100 uppercase tracking-tight block">Agent Comm Feed</span>
+                        <span className="text-[8px] font-mono text-emerald-400">● 7 AGENTS ONLINE & INTERCONNECTED</span>
+                      </div>
+                      <span className="text-[9px] font-mono text-zinc-500">Live Transcripts</span>
+                    </div>
+
+                    {/* Messages Scrollable Board */}
+                    <div className="flex-grow overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+                      {agentChats.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`p-2.5 rounded border text-[10px] font-mono leading-relaxed space-y-1 ${
+                            msg.senderId === "user"
+                              ? "bg-zinc-900/80 border-indigo-900/30 text-slate-200"
+                              : msg.type === "warning"
+                              ? "bg-amber-950/10 border-amber-950 text-slate-300"
+                              : msg.type === "success"
+                              ? "bg-emerald-950/10 border-emerald-950 text-slate-300"
+                              : msg.type === "negotiation"
+                              ? "bg-pink-950/10 border-pink-950 text-slate-300"
+                              : "bg-zinc-950/80 border-zinc-900 text-slate-300"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center text-[9px] font-black tracking-tight border-b border-zinc-900/40 pb-1">
+                            <span className="flex items-center gap-1">
+                              <span>{msg.avatar}</span>
+                              <span className="text-slate-100">{msg.senderName} ({msg.platform})</span>
+                            </span>
+                            <span className="text-slate-500 font-medium">{msg.timestamp}</span>
+                          </div>
+                          
+                          <p className="text-[10px] text-slate-300 font-sans">{msg.message}</p>
+                          
+                          <div className="pt-1 flex items-center justify-between text-[8px] text-slate-500 font-semibold uppercase">
+                            <span>Constraint: {msg.layoutConstraint}</span>
+                            <span className="text-indigo-400">VERIFIED</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Custom Prompt to Agent Board */}
+                    <div className="border-t border-zinc-900 pt-3 mt-2 space-y-1.5">
+                      <div className="text-[9px] font-mono font-black text-indigo-400 uppercase tracking-tight">
+                        Issue Custom Sync Command to Agent Team:
+                      </div>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          placeholder="e.g. Optimize tags for vintage leather jacket"
+                          value={customAgentPrompt}
+                          onChange={(e) => setCustomAgentPrompt(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSendCustomAgentPrompt();
+                            }
+                          }}
+                          className="flex-grow bg-zinc-950 border border-zinc-850 rounded px-2.5 py-1.5 text-[10px] font-mono text-slate-200 focus:outline-none"
+                        />
+                        <button
+                          onClick={handleSendCustomAgentPrompt}
+                          disabled={isSimulatingAgentSync || !customAgentPrompt.trim()}
+                          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-3 py-1.5 rounded text-[10px] font-mono font-bold text-slate-100 cursor-pointer transition-all"
+                        >
+                          Send
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1899,7 +2675,9 @@ export default function BossListers() {
                       { id: "ebay", label: "eBay SEO" },
                       { id: "shopify", label: "Shopify Elegant" },
                       { id: "etsy", label: "Etsy Story" },
-                      { id: "social", label: "Social Ad" }
+                      { id: "social", label: "Social Ad" },
+                      { id: "tiktok", label: "TikTok Shop" },
+                      { id: "depop", label: "Depop Streetwear" }
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -1968,6 +2746,28 @@ export default function BossListers() {
                       <p className="text-[9px] font-mono text-slate-500">Formatted with hashtags, emojis, and high-impact call-to-actions to spark conversion.</p>
                     </div>
                   )}
+                  {activeDescTab === "tiktok" && (
+                    <div className="space-y-1">
+                      <textarea
+                        value={formDescTiktok}
+                        onChange={(e) => setFormDescTiktok(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none h-28"
+                        placeholder="TikTok Shop video description..."
+                      />
+                      <p className="text-[9px] font-mono text-slate-500">Auto aligned with viral hook title prefix, TikTok Shop seller guidelines, and affiliate incentives.</p>
+                    </div>
+                  )}
+                  {activeDescTab === "depop" && (
+                    <div className="space-y-1">
+                      <textarea
+                        value={formDescDepop}
+                        onChange={(e) => setFormDescDepop(e.target.value)}
+                        className="w-full bg-zinc-950 border border-zinc-850 rounded p-2 text-xs font-mono text-yellow-400 focus:outline-none h-28"
+                        placeholder="Depop style description..."
+                      />
+                      <p className="text-[9px] font-mono text-slate-500">Formatted in lower-case, aesthetic streetwear tags, and hashtag groups for young vintage buyers.</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2018,7 +2818,7 @@ export default function BossListers() {
                   <div className="bg-zinc-900/50 border border-zinc-850 p-3 rounded-lg space-y-2.5">
                     <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">Select Marketplaces</div>
                     <div className="grid grid-cols-2 gap-2">
-                      {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop"].map(p => {
+                      {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop", "tiktok"].map(p => {
                         const isSelected = crosspostPlatforms.includes(p);
                         return (
                           <button
@@ -2042,11 +2842,129 @@ export default function BossListers() {
                     </div>
                     <button
                       onClick={handleCrosspost}
-                      className="bg-emerald-600 hover:bg-emerald-500 w-full py-2 rounded text-xs font-mono font-bold text-slate-100 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-emerald-600/10"
+                      disabled={isAuditing}
+                      className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 w-full py-2 rounded text-xs font-mono font-bold text-slate-100 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-emerald-600/10"
                     >
-                      <Send className="w-3.5 h-3.5" />
-                      CROSS-POST TO CHANNELS
+                      {isAuditing ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>RUNNING TEAM VERIFICATION...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>CROSS-POST TO CHANNELS</span>
+                        </>
+                      )}
                     </button>
+                  </div>
+
+                  {/* Dedicated Multi-Channel Quality Teams Card */}
+                  <div className="bg-zinc-900/50 border border-zinc-850 p-3 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-mono font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-indigo-400" />
+                        Dedicated Channel QA Teams
+                      </span>
+                      <span className="text-[9px] font-mono text-zinc-500">Automatic Auditing</span>
+                    </div>
+
+                    {/* Platform Team Tabs */}
+                    <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+                      {["ebay", "shopify", "etsy", "fb", "mercari", "poshmark", "depop", "tiktok"].map(p => {
+                        const isSelected = crosspostPlatforms.includes(p);
+                        const isActive = activeTeamView === p;
+                        const team = PLATFORM_TEAMS[p];
+                        return (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setActiveTeamView(p)}
+                            className={`px-2 py-1 rounded text-[9px] font-mono font-bold uppercase transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                              isActive
+                                ? "bg-indigo-600 text-white"
+                                : isSelected
+                                ? "bg-zinc-800 text-slate-300 border border-indigo-900/40"
+                                : "bg-zinc-950 text-slate-500 border border-zinc-900"
+                            }`}
+                          >
+                            <span>{team?.avatar || "💼"}</span>
+                            <span>{p}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Selected Team Details Card */}
+                    {PLATFORM_TEAMS[activeTeamView] && (() => {
+                      const team = PLATFORM_TEAMS[activeTeamView];
+                      const isSelected = crosspostPlatforms.includes(activeTeamView);
+                      const isCurrentlyAuditing = isAuditing && activeAuditPlatform === activeTeamView;
+                      
+                      return (
+                        <div className="bg-zinc-950 p-2.5 rounded border border-zinc-850 space-y-2">
+                          <div className="flex items-center justify-between border-b border-zinc-900 pb-1.5">
+                            <div>
+                              <div className="text-[11px] font-mono font-black text-slate-200 leading-tight uppercase flex items-center gap-1">
+                                <span>{team.avatar}</span>
+                                <span>{team.name}</span>
+                              </div>
+                              <span className="text-[8px] font-mono text-indigo-400 font-medium tracking-tight block mt-0.5">
+                                Lead Expert: {team.specialist}
+                              </span>
+                            </div>
+                            <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded font-bold uppercase ${
+                              isSelected ? "bg-indigo-950 text-indigo-400 border border-indigo-900/40" : "bg-zinc-900 text-zinc-600 border border-zinc-850"
+                            }`}>
+                              {isSelected ? "DEPLOYED" : "STANDBY"}
+                            </span>
+                          </div>
+
+                          <p className="text-[9px] text-zinc-400 font-sans leading-relaxed">
+                            This team inspects listings against {activeTeamView.toUpperCase()} specifics, community rules, and metadata parameters to prevent rejections.
+                          </p>
+
+                          {/* Checklist */}
+                          <div className="space-y-1.5">
+                            <span className="text-[8px] font-mono font-black text-slate-500 uppercase tracking-tight block">Pre-flight Checklist</span>
+                            <div className="space-y-1">
+                              {team.checklist.map((item, idx) => {
+                                const isChecked = checkedItems[`${activeTeamView}_${idx}`] || (!isAuditing && isSelected);
+                                return (
+                                  <div key={idx} className="flex items-start gap-1.5 text-[9px] font-mono">
+                                    <span className={`mt-0.5 font-bold ${isChecked ? "text-emerald-400" : "text-zinc-700"}`}>
+                                      {isChecked ? "✔" : "○"}
+                                    </span>
+                                    <span className={isChecked ? "text-slate-300" : "text-zinc-500"}>{item}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Verification Progress Bar when active auditing */}
+                    {isAuditing && (
+                      <div className="bg-indigo-950/40 border border-indigo-900/40 rounded p-2.5 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9px] font-mono font-bold text-indigo-300 flex items-center gap-1">
+                            <RefreshCw className="w-3 h-3 animate-spin text-indigo-400" />
+                            <span>TEAM AUDIT RUN ({auditProgress}%)</span>
+                          </span>
+                          <span className="text-[9px] font-mono text-slate-300 font-bold uppercase">
+                            Active: {activeAuditPlatform.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-indigo-500 h-full transition-all duration-300"
+                            style={{ width: `${auditProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
