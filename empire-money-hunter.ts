@@ -74,6 +74,7 @@ function saveAll(plan: any, videoPackage: any, zipCode: string) {
 }
 
 // Execute directly if run as main module
-if (require.main === module) {
-  empireMoneyHunter("02740", 500).then(console.log);
+const isMain = process.argv[1] && (process.argv[1].endsWith("empire-money-hunter.ts") || process.argv[1].endsWith("empire-money-hunter.js"));
+if (isMain) {
+  empireMoneyHunter("02740", 500).then(console.log).catch(console.error);
 }

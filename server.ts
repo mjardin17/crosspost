@@ -13,6 +13,17 @@ import { empireMoneyHunter } from "./empire-money-hunter.ts";
 
 dotenv.config();
 
+// --- SELF-HEALING GUARD INTERCEPTORS ---
+process.on("uncaughtException", (err) => {
+  console.error("⚠️ SELF-HEALING GUARD: Caught Uncaught Exception:", err);
+  // Prevent crash, keep port 3000 alive!
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("⚠️ SELF-HEALING GUARD: Unhandled Rejection at:", promise, "reason:", reason);
+  // Prevent crash, keep port 3000 alive!
+});
+
 const app = express();
 const PORT = 3000;
 
