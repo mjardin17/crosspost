@@ -25,8 +25,9 @@ import TestingCenter from "./components/TestingCenter";
 import KnowledgeCenter from "./components/KnowledgeCenter";
 import EmpireOrchestrator from "./components/EmpireOrchestrator";
 import SettingsCenter from "./components/SettingsCenter";
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, Radio } from "lucide-react";
 import CommandCenter from "./components/CommandCenter";
+import EmpireLiveDashboard from "./components/EmpireLiveDashboard";
 
 import { CentralErrorBoundary } from "./components/CentralErrorBoundary";
 import CentralLogDashboard from "./components/CentralLogDashboard";
@@ -616,6 +617,21 @@ export function App() {
                   <span>Mission Control</span>
                 </div>
                 <span className="text-[8px] bg-indigo-950 border border-indigo-900/40 text-indigo-300 px-1 rounded font-bold">CORE</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentWorkspace("livedashboard")}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium font-mono transition-all cursor-pointer ${
+                  currentWorkspace === "livedashboard"
+                    ? "bg-indigo-650 text-slate-100 shadow-md font-bold"
+                    : "text-slate-400 hover:text-indigo-400 hover:bg-slate-800/25"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+                  <span>Empire Live System</span>
+                </div>
+                <span className="text-[8px] bg-emerald-950 border border-emerald-900/40 text-emerald-400 px-1 rounded font-bold">LIVE</span>
               </button>
 
               <button
@@ -2307,6 +2323,10 @@ export function App() {
 
         {currentWorkspace === "knowledge" && (
           <KnowledgeCenter />
+        )}
+
+        {currentWorkspace === "livedashboard" && (
+          <EmpireLiveDashboard />
         )}
 
         {/* DEEPSEEK & LLM CODEBASE INGRESS EXPORTER SECTION */}
